@@ -1,0 +1,35 @@
+<div class="container col-md-6 offset-mid-3">
+    <h3 class="text-center"> Créer une réservation </h3>
+
+    <div *ngIf="errorMessage" class="alert alert-danger">
+        {{ errorMessage }}
+    </div>
+
+    <div *ngIf="successMessage" class="alert alert-success">
+        {{ successMessage }}
+    </div>
+
+    <form (ngSubmit)="onSubmit()" autocomplete="off">
+        <div class="form-group">
+            <label style="margin-bottom: 10px"> Livre </label>
+            <select class="form-control" [(ngModel)]="request.livreId" name="livreId" required>
+                <option value="">-- Sélectionner un livre --</option>
+                <option *ngFor="let book of books" [value]="book.bookId">
+                    {{ book.bookName }} ({{ book.bookAuthor }})
+                </option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label style="margin-bottom: 10px"> Adhérent </label>
+            <select class="form-control" [(ngModel)]="request.adherentId" name="adherentId" required>
+                <option value="">-- Sélectionner un adhérent --</option>
+                <option *ngFor="let user of users" [value]="user.userId">
+                    {{ user.name }} ({{ user.username }})
+                </option>
+            </select>
+        </div>
+
+        <button class="btn btn-success" type="submit"> Créer la réservation </button>
+    </form>
+</div>

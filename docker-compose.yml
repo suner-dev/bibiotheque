@@ -1,0 +1,41 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: bibliotheque-db
+    environment:
+      MYSQL_ROOT_PASSWORD: mysql
+      MYSQL_DATABASE: bibliotheque
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pmysql"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  backend:
+    build: ./bibliotheque-backend
+    container_name: bibliotheque-backend
+    ports:
+      - "8087:8087"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/bibliotheque
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: mysql
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./bibliotheque-frontend
+    container_name: bibliotheque-frontend
+    ports:
+      - "4200:4200"
+    depends_on:
+      - backend
+
+volumes:
+  mysql-data:

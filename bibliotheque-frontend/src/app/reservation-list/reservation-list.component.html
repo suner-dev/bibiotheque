@@ -1,0 +1,52 @@
+<h2>Liste des réservations</h2>
+
+<div class="mb-3">
+    <label style="margin-bottom: 10px">Filtrer par statut</label>
+    <select class="form-control" [(ngModel)]="selectedStatut" (change)="filterByStatut()">
+        <option value="">Tous</option>
+        <option value="EN_ATTENTE">EN_ATTENTE</option>
+        <option value="DISPONIBLE">DISPONIBLE</option>
+        <option value="ANNULEE">ANNULEE</option>
+        <option value="EXPIREE">EXPIREE</option>
+        <option value="HONOREE">HONOREE</option>
+    </select>
+</div>
+
+<div *ngIf="errorMessage" class="alert alert-danger">
+    {{ errorMessage }}
+</div>
+
+<table class="table table-success table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Livre</th>
+            <th>Adhérent</th>
+            <th>Date Réservation</th>
+            <th>Date Expiration</th>
+            <th>Statut</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let reservation of reservations">
+            <td>{{ reservation.id }}</td>
+            <td>{{ reservation.livreName }} (ID: {{ reservation.livreId }})</td>
+            <td>{{ reservation.adherentName }} (ID: {{ reservation.adherentId }})</td>
+            <td>{{ reservation.dateReservation }}</td>
+            <td>{{ reservation.dateExpiration }}</td>
+            <td>{{ reservation.statut }}</td>
+            <td>
+                <button *ngIf="reservation.statut === 'EN_ATTENTE' || reservation.statut === 'DISPONIBLE'"
+                    (click)="annulerReservation(reservation.id)"
+                    class="btn btn-warning btn-sm">
+                    Annuler
+                </button>
+                <button (click)="deleteReservation(reservation.id)"
+                    class="btn btn-danger btn-sm">
+                    Supprimer
+                </button>
+            </td>
+        </tr>
+    </tbody>
+</table>

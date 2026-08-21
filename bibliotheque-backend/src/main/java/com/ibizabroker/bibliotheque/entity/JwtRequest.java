@@ -9,7 +9,7 @@ public class JwtRequest {
         return username;
     }
 
-    public void setUserName(String userName) {
+    public void setUsername(String userName) {
         this.username = userName;
     }
 
@@ -17,7 +17,7 @@ public class JwtRequest {
         return password;
     }
 
-    public void setUserPassword(String userPassword) {
+    public void setPassword(String userPassword) {
         this.password = userPassword;
     }
 }
