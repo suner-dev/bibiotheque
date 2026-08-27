@@ -1,20 +1,21 @@
 services:
   db:
-    image: mysql:8.0
+    image: postgres:15
     container_name: bibliotheque-db
     environment:
-      MYSQL_ROOT_PASSWORD: mysql
-      MYSQL_DATABASE: bibliotheque
+      POSTGRES_DB: bibliotheque
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
-      - "3308:3306"
+      - "5433:5432"
     volumes:
-      - mysql-data:/var/lib/mysql
+      - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-pmysql"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bibliotheque"]
+      interval: 10s
       timeout: 5s
-      retries: 20
-      start_period: 60s
+      retries: 10
+      start_period: 30s
 
   backend:
     build: ./bibliotheque-backend
@@ -22,9 +23,9 @@ services:
     ports:
       - "8087:8087"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/bibliotheque
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: mysql
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/bibliotheque
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
     depends_on:
       db:
         condition: service_healthy
@@ -38,4 +39,4 @@ services:
       - backend
 
 volumes:
-  mysql-data:
+  postgres-data:
