@@ -38,14 +38,14 @@
 - Expiration (dateReservation + 7 jours dépassés) → **EXPIREE** (tâche planifiée + vérification à la lecture).
 - Le quota RG-03 ne compte que les réservations actives (EN_ATTENTE/DISPONIBLE).
 
-## Captures d'écran (4)
+## Captures d'écran
 
-> Faire les captures en local (http://localhost:4202) et les insérer ici :
-
-1. **État de chargement** : `![chargement](captures/01-chargement.png)` — spinner pendant l'appel (throttlage réseau dans DevTools pour le figer).
-2. **Liste remplie** : `![donnees](captures/02-donnees.png)` — tableau + filtre actif.
-3. **Liste vide** : `![vide](captures/03-vide.png)` — filtre HONOREE s'il n'y en a pas, message « Aucune réservation ».
-4. **Refus 409** : `![409](captures/04-409.png)` — tenter de réserver le livre L5 (disponible) → message RG-01 affiché à côté du formulaire.
+1. **État de chargement** : ![chargement](captures/01-chargement.png) — spinner « Chargement des réservations... » pendant l'appel (requête API retardée pour le figer).
+2. **Liste remplie** : ![donnees](captures/02-liste-remplie.png) — tableau + badges de statut.
+3. **Liste vide** : ![vide](captures/03-liste-vide.png) — message explicite « Aucune réservation ».
+4. **Refus 409** : ![409](captures/04-refus-409.png) — message métier du serveur affiché à côté du formulaire.
+5. **Swagger UI (vue globale)** : ![swagger](captures/05-swagger-ui.png) — documentation interactive, bouton Authorize.
+6. **Swagger UI (endpoints réservations)** : ![swagger-reservations](captures/06-swagger-reservations.png) — `/api/reservations` + `/annuler`.
 
 ## Tests
 

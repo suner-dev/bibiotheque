@@ -17,7 +17,7 @@
       <span class="text-muted"><i class="bi bi-arrow-repeat spinner-border spinner-border-sm me-2"></i>Chargement des données...</span>
     </div>
 
-    <form (ngSubmit)="onSubmit()" autocomplete="off" #reservationForm="ngForm">
+    <form (ngSubmit)="onSubmit(reservationForm)" autocomplete="off" #reservationForm="ngForm">
       <!-- Livre -->
       <div class="mb-3">
         <label class="form-label"><strong>Livre</strong></label>
@@ -49,7 +49,7 @@
       <!-- Bouton de soumission -->
       <button type="submit"
               class="btn btn-success w-100"
-              [disabled]="!canSubmit || isSubmitting">
+              [disabled]="reservationForm.invalid || isSubmitting">
         <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-2"></span>
         {{ isSubmitting ? 'Création...' : 'Créer la réservation' }}
       </button>
