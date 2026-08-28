@@ -16,6 +16,8 @@ export class ReservationListComponent {
 
   @Output() filterChange = new EventEmitter<string>();
   @Output() cancelRequested = new EventEmitter<number>();
+  @Output() detailsRequested = new EventEmitter<number>();
+  @Output() deleteRequested = new EventEmitter<number>();
 
   statuts = ['', 'EN_ATTENTE', 'DISPONIBLE', 'ANNULEE', 'EXPIREE', 'HONOREE'];
 
@@ -26,6 +28,16 @@ export class ReservationListComponent {
   onCancel(id: number): void {
     if (confirm('Êtes-vous sûr de vouloir annuler cette réservation ?')) {
       this.cancelRequested.emit(id);
+    }
+  }
+
+  onDetails(id: number): void {
+    this.detailsRequested.emit(id);
+  }
+
+  onDelete(id: number): void {
+    if (confirm('Êtes-vous sûr de vouloir supprimer définitivement cette réservation ?')) {
+      this.deleteRequested.emit(id);
     }
   }
 

@@ -11,6 +11,8 @@ import { UsersService } from '../_service/users.service';
 })
 export class LoginComponent implements OnInit {
 
+  errorMessage = '';
+
   constructor(private userService: UsersService,
     private userAuthSerivce: UserAuthService,
     private router: Router
@@ -20,6 +22,7 @@ export class LoginComponent implements OnInit {
   }
 
   login(loginForm: NgForm) {
+    this.errorMessage = '';
     this.userService.login(loginForm.value).subscribe(
       (response: any)=>{
         this.userAuthSerivce.setRoles(response.user.role);
@@ -36,6 +39,13 @@ export class LoginComponent implements OnInit {
       },
       (error)=>{
         console.log(error);
+        if (error.status === 0) {
+          this.errorMessage = 'Impossible de contacter le serveur. Vérifiez que le backend est démarré.';
+        } else if (error.status === 401 || error.status === 403) {
+          this.errorMessage = 'Identifiants incorrects. Vérifiez votre username et votre mot de passe.';
+        } else {
+          this.errorMessage = error?.error?.message || 'Erreur lors de la connexion. Veuillez réessayer.';
+        }
       }
     );
   }

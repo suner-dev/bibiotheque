@@ -66,15 +66,22 @@
       <td>{{ formatDate(reservation.dateReservation) }}</td>
       <td>{{ formatDate(reservation.dateExpiration) }}</td>
       <td class="table-actions">
+        <button class="btn btn-info btn-sm me-1" (click)="onDetails(reservation.id)" title="Voir le détail">
+          Détails
+        </button>
         <button *ngIf="canCancel(reservation.statut)"
                 [disabled]="isCancelling"
                 (click)="onCancel(reservation.id)"
-                class="btn btn-warning btn-sm"
+                class="btn btn-warning btn-sm me-1"
                 title="Annuler cette réservation">
           <span *ngIf="isCancelling" class="spinner-border spinner-border-sm me-1"></span>
           Annuler
         </button>
-        <span *ngIf="!canCancel(reservation.statut)" class="text-muted fst-italic">—</span>
+        <button class="btn btn-danger btn-sm"
+                (click)="onDelete(reservation.id)"
+                title="Supprimer définitivement cette réservation">
+          Supprimer
+        </button>
       </td>
     </tr>
   </tbody>

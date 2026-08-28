@@ -5,7 +5,9 @@ import com.ibizabroker.bibliotheque.entity.ReservationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, Integer> {
@@ -19,4 +21,10 @@ public interface ReservationRepository extends JpaRepository<Reservation, Intege
     long countByAdherentUserIdAndStatutIn(Integer adherentId, List<ReservationStatus> statuts);
 
     boolean existsByAdherentUserIdAndLivreBookIdAndStatutIn(Integer adherentId, Integer livreId, List<ReservationStatus> statuts);
+
+    /** Plus ancienne réservation d'un livre dans un statut donné (file d'attente FIFO). */
+    Optional<Reservation> findFirstByLivreBookIdAndStatutOrderByDateReservationAsc(Integer livreId, ReservationStatus statut);
+
+    /** Réservations dont la date d'expiration est passée parmi les statuts actifs. */
+    List<Reservation> findByStatutInAndDateExpirationBefore(List<ReservationStatus> statuts, Date date);
 }

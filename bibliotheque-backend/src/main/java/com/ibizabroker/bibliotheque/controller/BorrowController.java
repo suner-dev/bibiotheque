@@ -26,10 +26,17 @@ public class BorrowController {
     @Autowired
     private BooksRepository booksRepository;
 
+    @Autowired
+    private com.ibizabroker.bibliotheque.service.ReservationService reservationService;
+
     @PostMapping
     public String borrowBook(@RequestBody Borrow borrow) {
-        Users user = usersRepository.findById(borrow.getUserId()).get();
-        Books book = booksRepository.findById(borrow.getBookId()).get();
+        Users user = usersRepository.findById(borrow.getUserId())
+                .orElseThrow(() -> new com.ibizabroker.bibliotheque.exceptions.NotFoundException(
+                        "User with id " + borrow.getUserId() + " does not exist."));
+        Books book = booksRepository.findById(borrow.getBookId())
+                .orElseThrow(() -> new com.ibizabroker.bibliotheque.exceptions.NotFoundException(
+                        "Book with id " + borrow.getBookId() + " does not exist."));
 
         if (book.getNoOfCopies() < 1) {
             return "The book \"" + book.getBookName() + "\" is out of stock!";
@@ -37,6 +44,9 @@ public class BorrowController {
 
         book.borrowBook();
         booksRepository.save(book);
+
+        // RG-06 : si cet adhérent avait réservé ce livre (DISPONIBLE pour lui), la réservation passe à HONOREE
+        reservationService.honorerReservationSiExistante(book.getBookId(), user.getUserId());
 
         Date currentDate = new Date();
         Date overdueDate = new Date();
@@ -57,11 +67,18 @@ public class BorrowController {
 
     @PutMapping
     public Borrow returnBook(@RequestBody Borrow borrow) {
-        Borrow borrowBook = borrowRepository.findById(borrow.getBorrowId()).get();
-        Books book = booksRepository.findById(borrowBook.getBookId()).get();
+        Borrow borrowBook = borrowRepository.findById(borrow.getBorrowId())
+                .orElseThrow(() -> new com.ibizabroker.bibliotheque.exceptions.NotFoundException(
+                        "Borrow with id " + borrow.getBorrowId() + " does not exist."));
+        Books book = booksRepository.findById(borrowBook.getBookId())
+                .orElseThrow(() -> new com.ibizabroker.bibliotheque.exceptions.NotFoundException(
+                        "Book with id " + borrowBook.getBookId() + " does not exist."));
 
         book.returnBook();
         booksRepository.save(book);
+
+        // RG-06 : un exemplaire redevient disponible -> la plus ancienne réservation EN_ATTENTE passe à DISPONIBLE
+        reservationService.promouvoirProchaineReservation(book.getBookId());
 
         Date currentDate = new Date();
         borrowBook.setReturnDate(currentDate);

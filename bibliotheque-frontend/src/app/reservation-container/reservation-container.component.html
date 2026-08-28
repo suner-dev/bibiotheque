@@ -1,4 +1,31 @@
 <div class="container-fluid py-4">
+  <!-- Panneau de détail (GET /api/reservations/{id}) -->
+  <div *ngIf="isLoadingDetails || detailsError || selectedReservation" class="card card-shadow mb-4">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h4 class="mb-0">Détail de la réservation</h4>
+        <button *ngIf="!isLoadingDetails" class="btn btn-sm btn-secondary" (click)="closeDetails()">Fermer ✕</button>
+      </div>
+
+      <div *ngIf="isLoadingDetails" class="text-center py-3">
+        <span class="spinner-border spinner-border-sm me-2"></span>Chargement du détail...
+      </div>
+
+      <div *ngIf="detailsError && !isLoadingDetails" class="alert alert-danger mb-0" role="alert">
+        {{ detailsError }}
+        <button class="btn btn-sm btn-outline-danger ms-2" (click)="retryDetails()">Réessayer</button>
+      </div>
+
+      <div *ngIf="selectedReservation && !isLoadingDetails" class="row">
+        <div class="col-md-3"><strong>Livre :</strong> {{ selectedReservation.livreName }} (ID {{ selectedReservation.livreId }})</div>
+        <div class="col-md-3"><strong>Adhérent :</strong> {{ selectedReservation.adherentName }} (ID {{ selectedReservation.adherentId }})</div>
+        <div class="col-md-2"><strong>Statut :</strong> {{ selectedReservation.statut }}</div>
+        <div class="col-md-2"><strong>Réservé le :</strong> {{ selectedReservation.dateReservation | date:'dd/MM/yyyy HH:mm' }}</div>
+        <div class="col-md-2"><strong>Expire le :</strong> {{ selectedReservation.dateExpiration | date:'dd/MM/yyyy HH:mm' }}</div>
+      </div>
+    </div>
+  </div>
+
   <div class="row">
     <!-- Formulaire de création -->
     <div class="col-lg-4 mb-4">
@@ -18,7 +45,9 @@
         [errorMessage]="errorMessage"
         [selectedStatut]="selectedStatut"
         (filterChange)="onFilterChange($event)"
-        (cancelRequested)="onCancelReservation($event)">
+        (cancelRequested)="onCancelReservation($event)"
+        (detailsRequested)="onDetailsRequested($event)"
+        (deleteRequested)="onDeleteReservation($event)">
       </app-reservation-list>
     </div>
   </div>

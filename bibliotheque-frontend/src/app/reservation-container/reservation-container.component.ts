@@ -17,6 +17,11 @@ export class ReservationContainerComponent implements OnInit {
   books: Books[] = [];
   users: Users[] = [];
 
+  // Panneau de détail (GET /api/reservations/{id})
+  selectedReservation: Reservation | null = null;
+  isLoadingDetails = false;
+  detailsError = '';
+
   isLoading = true;
   isCancelling = false;
   errorMessage = '';
@@ -80,12 +85,59 @@ export class ReservationContainerComponent implements OnInit {
       next: () => {
         this.isCancelling = false;
         this.loadReservations();
+        if (this.selectedReservation?.id === id) {
+          this.onDetailsRequested(id);
+        }
       },
       error: (err) => {
         this.isCancelling = false;
         this.errorMessage = this.buildErrorMessage(err);
       }
     });
+  }
+
+  /** Consomme GET /api/reservations/{id} via le service */
+  onDetailsRequested(id: number): void {
+    this.isLoadingDetails = true;
+    this.detailsError = '';
+    this.selectedReservation = null;
+    this.reservationService.getReservationById(id).subscribe({
+      next: (data) => {
+        this.selectedReservation = data;
+        this.isLoadingDetails = false;
+      },
+      error: (err) => {
+        this.isLoadingDetails = false;
+        this.detailsError = err?.error?.message || 'Impossible de charger le détail de la réservation.';
+      }
+    });
+  }
+
+  closeDetails(): void {
+    this.selectedReservation = null;
+    this.detailsError = '';
+  }
+
+  /** Consomme DELETE /api/reservations/{id} via le service */
+  onDeleteReservation(id: number): void {
+    this.errorMessage = '';
+    this.reservationService.deleteReservation(id).subscribe({
+      next: () => {
+        if (this.selectedReservation?.id === id) {
+          this.closeDetails();
+        }
+        this.loadReservations();
+      },
+      error: (err) => {
+        this.errorMessage = this.buildErrorMessage(err);
+      }
+    });
+  }
+
+  retryDetails(): void {
+    if (this.selectedReservation) {
+      this.onDetailsRequested(this.selectedReservation.id);
+    }
   }
 
   retry(): void {

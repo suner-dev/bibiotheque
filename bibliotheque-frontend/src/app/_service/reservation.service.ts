@@ -1,6 +1,7 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 import { Reservation, ReservationRequest } from '../_model/reservation';
 
 @Injectable({
@@ -8,7 +9,7 @@ import { Reservation, ReservationRequest } from '../_model/reservation';
 })
 export class ReservationService {
 
-  private baseURL = "http://localhost:8087/api/reservations";
+  private baseURL = `${environment.apiUrl}/api/reservations`;
 
   constructor(private httpClient: HttpClient) { }
 

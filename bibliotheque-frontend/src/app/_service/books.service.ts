@@ -1,6 +1,7 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 import { Books } from '../_model/books';
 
 @Injectable({
@@ -8,7 +9,7 @@ import { Books } from '../_model/books';
 })
 export class BooksService {
 
-  private baseURL = "http://localhost:8087/admin/books";
+  private baseURL = `${environment.apiUrl}/admin/books`;
 
   constructor(private httpClient: HttpClient) { }
 

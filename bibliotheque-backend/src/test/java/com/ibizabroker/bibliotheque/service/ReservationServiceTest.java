@@ -20,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -310,5 +311,68 @@ public class ReservationServiceTest {
     void deleteReservation_NotFound_ThrowsNotFound() {
         when(reservationRepository.findById(999)).thenReturn(Optional.empty());
         assertThrows(NotFoundException.class, () -> reservationService.deleteReservation(999));
+    }
+
+    @Test
+    void promouvoirProchaineReservation_PasseEN_ATTENTEADISPONIBLE() {
+        var reservation = new com.ibizabroker.bibliotheque.entity.Reservation();
+        reservation.setId(10);
+        reservation.setStatut(ReservationStatus.EN_ATTENTE);
+        reservation.setLivre(book);
+        reservation.setAdherent(user);
+
+        when(reservationRepository.findFirstByLivreBookIdAndStatutOrderByDateReservationAsc(1, ReservationStatus.EN_ATTENTE))
+                .thenReturn(Optional.of(reservation));
+        when(reservationRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        reservationService.promouvoirProchaineReservation(1);
+
+        assertEquals(ReservationStatus.DISPONIBLE, reservation.getStatut());
+    }
+
+    @Test
+    void promouvoirProchaineReservation_SansReservationActive_NeFaitRien() {
+        when(reservationRepository.findFirstByLivreBookIdAndStatutOrderByDateReservationAsc(1, ReservationStatus.EN_ATTENTE))
+                .thenReturn(Optional.empty());
+
+        assertDoesNotThrow(() -> reservationService.promouvoirProchaineReservation(1));
+    }
+
+    @Test
+    void honorerReservationSiExistante_PasseDISPONIBLEAHONOREE() {
+        var reservation = new com.ibizabroker.bibliotheque.entity.Reservation();
+        reservation.setId(11);
+        reservation.setStatut(ReservationStatus.DISPONIBLE);
+        reservation.setLivre(book);
+        reservation.setAdherent(user);
+
+        when(reservationRepository.findByAdherentUserIdAndStatut(1, ReservationStatus.DISPONIBLE))
+                .thenReturn(List.of(reservation));
+        when(reservationRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        reservationService.honorerReservationSiExistante(1, 1);
+
+        assertEquals(ReservationStatus.HONOREE, reservation.getStatut());
+    }
+
+    @Test
+    void expirerReservationsPerimees_PasseActivesAEXPIREE() {
+        var reservation = new com.ibizabroker.bibliotheque.entity.Reservation();
+        reservation.setId(12);
+        reservation.setStatut(ReservationStatus.EN_ATTENTE);
+        reservation.setLivre(book);
+        reservation.setAdherent(user);
+        reservation.setDateExpiration(new Date(System.currentTimeMillis() - 1000));
+
+        when(reservationRepository.findByStatutInAndDateExpirationBefore(any(), any()))
+                .thenReturn(List.of(reservation));
+        when(reservationRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(reservationRepository.findFirstByLivreBookIdAndStatutOrderByDateReservationAsc(anyInt(), any()))
+                .thenReturn(Optional.empty());
+
+        int count = reservationService.expirerReservationsPerimees();
+
+        assertEquals(1, count);
+        assertEquals(ReservationStatus.EXPIREE, reservation.getStatut());
     }
 }

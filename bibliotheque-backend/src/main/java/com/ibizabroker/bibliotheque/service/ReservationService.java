@@ -15,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
 @Service
 public class ReservationService {
 
@@ -99,6 +98,9 @@ public class ReservationService {
     }
 
     public List<ReservationResponse> getAllReservations(ReservationStatus statut, Integer adherentId) {
+        // RG-06 : met à jour les réservations périmées avant toute lecture
+        expirerReservationsPerimees();
+
         List<Reservation> reservations;
 
         if (statut != null && adherentId != null) {
@@ -117,6 +119,9 @@ public class ReservationService {
     }
 
     public ReservationResponse getReservationById(Integer id) {
+        // RG-06 : met à jour les réservations périmées avant toute lecture
+        expirerReservationsPerimees();
+
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Reservation with id " + id + " does not exist."));
         return toResponse(reservation);
@@ -142,6 +147,52 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Reservation with id " + id + " does not exist."));
         reservationRepository.delete(reservation);
+    }
+
+    /**
+     * RG-06 / cycle de vie : lorsqu'un exemplaire d'un livre redevient disponible
+     * (retour d'emprunt), la plus ancienne réservation EN_ATTENTE de ce livre passe à DISPONIBLE.
+     */
+    @Transactional
+    public void promouvoirProchaineReservation(Integer livreId) {
+        reservationRepository.findFirstByLivreBookIdAndStatutOrderByDateReservationAsc(livreId, ReservationStatus.EN_ATTENTE)
+                .ifPresent(reservation -> {
+                    reservation.setStatut(ReservationStatus.DISPONIBLE);
+                    reservationRepository.save(reservation);
+                });
+    }
+
+    /**
+     * RG-06 / cycle de vie : lorsqu'un adhérent emprunte effectivement le livre
+     * qu'il avait réservé (statut DISPONIBLE pour son compte), la réservation passe à HONOREE.
+     */
+    @Transactional
+    public void honorerReservationSiExistante(Integer livreId, Integer adherentId) {
+        reservationRepository.findByAdherentUserIdAndStatut(adherentId, ReservationStatus.DISPONIBLE).stream()
+                .filter(reservation -> reservation.getLivre().getBookId().equals(livreId))
+                .findFirst()
+                .ifPresent(reservation -> {
+                    reservation.setStatut(ReservationStatus.HONOREE);
+                    reservationRepository.save(reservation);
+                });
+    }
+
+    /**
+     * RG-06 / cycle de vie : les réservations actives dont la date d'expiration (dateReservation + 7 jours)
+     * est dépassée passent à EXPIREE. Pour chaque livre concerné, la réservation suivante est promue.
+     */
+    @Transactional
+    public int expirerReservationsPerimees() {
+        Date now = new Date();
+        List<Reservation> perimees = reservationRepository.findByStatutInAndDateExpirationBefore(ACTIVE_STATUSES, now);
+        Set<Integer> livresConcernees = new HashSet<>();
+        for (Reservation reservation : perimees) {
+            reservation.setStatut(ReservationStatus.EXPIREE);
+            reservationRepository.save(reservation);
+            livresConcernees.add(reservation.getLivre().getBookId());
+        }
+        livresConcernees.forEach(this::promouvoirProchaineReservation);
+        return perimees.size();
     }
 
     private boolean isBookAvailable(Books book) {
