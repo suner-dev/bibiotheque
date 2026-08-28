@@ -1,0 +1,25 @@
+<div class="container-fluid py-4">
+  <div class="row">
+    <!-- Formulaire de création -->
+    <div class="col-lg-4 mb-4">
+      <app-create-reservation
+        [books]="books"
+        [users]="users"
+        (reservationCreated)="onReservationCreated()">
+      </app-create-reservation>
+    </div>
+
+    <!-- Liste des réservations -->
+    <div class="col-lg-8">
+      <app-reservation-list
+        [reservations]="reservations"
+        [isLoading]="isLoading"
+        [isCancelling]="isCancelling"
+        [errorMessage]="errorMessage"
+        [selectedStatut]="selectedStatut"
+        (filterChange)="onFilterChange($event)"
+        (cancelRequested)="onCancelReservation($event)">
+      </app-reservation-list>
+    </div>
+  </div>
+</div>

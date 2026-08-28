@@ -1,12 +1,8 @@
-import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { Books } from '../_model/books';
 import { Users } from '../_model/users';
 import { ReservationRequest } from '../_model/reservation';
-import { BooksService } from '../_service/books.service';
-import { UsersService } from '../_service/users.service';
 import { ReservationService } from '../_service/reservation.service';
-import { UserAuthService } from '../_service/user-auth.service';
 
 @Component({
   selector: 'app-create-reservation',
@@ -15,63 +11,79 @@ import { UserAuthService } from '../_service/user-auth.service';
 })
 export class CreateReservationComponent implements OnInit {
 
-  books: Books[] = [];
-  users: Users[] = [];
+  @Input() books: Books[] = [];
+  @Input() users: Users[] = [];
+  @Output() reservationCreated = new EventEmitter<void>();
+
   request: ReservationRequest = new ReservationRequest();
   errorMessage: string = '';
   successMessage: string = '';
+    isSubmitting: boolean = false;
 
-  constructor(
-    private booksService: BooksService,
-    private usersService: UsersService,
-    private reservationService: ReservationService,
-    private userAuthService: UserAuthService,
-    private router: Router
-  ) { }
+  constructor(private reservationService: ReservationService) {}
 
   ngOnInit(): void {
-    this.loadBooks();
-    this.loadUsers();
-    // Set current user as adherent
-    this.request.adherentId = this.userAuthService.getUserId();
+    this.request = new ReservationRequest();
   }
 
-  loadBooks(): void {
-    this.booksService.getBooksList().subscribe(data => {
-      this.books = data;
-    });
-  }
-
-  loadUsers(): void {
-    this.usersService.getUsersList().subscribe(data => {
-      this.users = data;
-    });
+  /** Le bouton est inactif tant que les deux champs ne sont pas renseignés */
+  get canSubmit(): boolean {
+    return !!(this.request.livreId && this.request.adherentId);
   }
 
   onSubmit(): void {
+    if (!this.canSubmit) {
+      return;
+    }
+
+    this.isSubmitting = true;
     this.errorMessage = '';
     this.successMessage = '';
 
-    this.reservationService.createReservation(this.request).subscribe(
-      data => {
-        console.log('Réservation créée:', data);
-        this.successMessage = 'Réservation créée avec succès!';
+    this.reservationService.createReservation(this.request).subscribe({
+      next: (data: any) => {
+        this.isSubmitting = false;
+        this.successMessage = 'Réservation créée avec succès !';
+        this.request = new ReservationRequest();
         setTimeout(() => {
-          this.router.navigate(['/reservations']);
-        }, 2000);
+          this.successMessage = '';
+          this.reservationCreated.emit();
+        }, 1500);
       },
-      error => {
-        if (error.error?.message) {
-          this.errorMessage = error.error.message;
-        } else if (error.status === 409) {
-          this.errorMessage = 'Conflit: ' + (error.error?.message || 'Règle métier violée');
-        } else if (error.status === 404) {
-          this.errorMessage = 'Ressource introuvable';
-        } else {
-          this.errorMessage = 'Erreur lors de la création de la réservation';
-        }
-        console.log(error);
+      error: (err) => {
+        this.isSubmitting = false;
+        this.errorMessage = this.parseError(err);
       }
-    );
+    });
+  }
+
+  /** Parse les erreurs métier du serveur */
+  private parseError(err: any): string {
+    const status = err?.status;
+    const msg = err?.error?.message;
+
+    if (status === 0) {
+      return 'Impossible de contacter le serveur. Vérifiez que le backend est démarré.';
+    }
+    if (status === 409) {
+      // Messages métier spécifiques
+      if (msg && msg.includes('disponible')) {
+        return '⚠️ Ce livre est disponible. Vous ne pouvez pas le réserver (RG-01).';
+      }
+      if (msg && msg.includes('déjà une réservation')) {
+        return '⚠️ Vous avez déjà une réservation active pour ce livre (RG-02).';
+      }
+      if (msg && msg.includes('3 réservations')) {
+        return '⚠️ Vous avez atteint le quota maximum de 3 réservations actives (RG-03).';
+      }
+      return msg || 'Conflit métier : la réservation ne peut pas être créée.';
+    }
+    if (status === 400) {
+      return msg || 'Champs manquant ou invalide. Veuillez vérifier le formulaire.';
+    }
+    if (status === 404) {
+      return 'Livre ou adhérent introuvable.';
+    }
+    return msg || 'Erreur lors de la création de la réservation.';
   }
 }

@@ -1,66 +1,54 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { Reservation } from '../_model/reservation';
-import { ReservationService } from '../_service/reservation.service';
 
 @Component({
   selector: 'app-reservation-list',
   templateUrl: './reservation-list.component.html',
   styleUrls: ['./reservation-list.component.css']
 })
-export class ReservationListComponent implements OnInit {
+export class ReservationListComponent {
 
-  reservations: Reservation[] = [];
-  selectedStatut: string = '';
-  errorMessage: string = '';
+  @Input() reservations: Reservation[] = [];
+  @Input() isLoading: boolean = false;
+  @Input() isCancelling: boolean = false;
+  @Input() errorMessage: string = '';
+  @Input() selectedStatut: string = '';
 
-  constructor(private reservationService: ReservationService) { }
+  @Output() filterChange = new EventEmitter<string>();
+  @Output() cancelRequested = new EventEmitter<number>();
 
-  ngOnInit(): void {
-    this.loadReservations();
+  statuts = ['', 'EN_ATTENTE', 'DISPONIBLE', 'ANNULEE', 'EXPIREE', 'HONOREE'];
+
+  onFilterChange(): void {
+    this.filterChange.emit(this.selectedStatut);
   }
 
-  loadReservations(): void {
-    this.reservationService.getReservations(this.selectedStatut || undefined).subscribe(
-      data => {
-        this.reservations = data;
-        this.errorMessage = '';
-      },
-      error => {
-        this.errorMessage = 'Erreur lors du chargement des réservations';
-        console.log(error);
-      }
-    );
-  }
-
-  filterByStatut(): void {
-    this.loadReservations();
-  }
-
-  annulerReservation(id: number): void {
-    this.reservationService.annulerReservation(id).subscribe(
-      data => {
-        console.log('Réservation annulée:', data);
-        this.loadReservations();
-      },
-      error => {
-        this.errorMessage = error.error?.message || 'Erreur lors de l\'annulation';
-        console.log(error);
-      }
-    );
-  }
-
-  deleteReservation(id: number): void {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette réservation ?')) {
-      this.reservationService.deleteReservation(id).subscribe(
-        () => {
-          console.log('Réservation supprimée');
-          this.loadReservations();
-        },
-        error => {
-          this.errorMessage = error.error?.message || 'Erreur lors de la suppression';
-          console.log(error);
-        }
-      );
+  onCancel(id: number): void {
+    if (confirm('Êtes-vous sûr de vouloir annuler cette réservation ?')) {
+      this.cancelRequested.emit(id);
     }
+  }
+
+  canCancel(statut: string): boolean {
+    return statut === 'EN_ATTENTE' || statut === 'DISPONIBLE';
+  }
+
+    formatDate(dateVal: Date | string | any): string {
+        if (!dateVal) return '-';
+    const d = new Date(dateVal);
+    return d.toLocaleString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    return d.toLocaleString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   }
 }

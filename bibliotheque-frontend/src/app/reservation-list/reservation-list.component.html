@@ -1,52 +1,81 @@
-<h2>Liste des réservations</h2>
+<h3 class="mb-3">Liste des réservations</h3>
 
+<!-- Filtre par statut -->
 <div class="mb-3">
-    <label style="margin-bottom: 10px">Filtrer par statut</label>
-    <select class="form-control" [(ngModel)]="selectedStatut" (change)="filterByStatut()">
-        <option value="">Tous</option>
-        <option value="EN_ATTENTE">EN_ATTENTE</option>
-        <option value="DISPONIBLE">DISPONIBLE</option>
-        <option value="ANNULEE">ANNULEE</option>
-        <option value="EXPIREE">EXPIREE</option>
-        <option value="HONOREE">HONOREE</option>
-    </select>
+  <label class="form-label" style="margin-bottom: 5px;"><strong>Filtrer par statut :</strong></label>
+  <select class="form-select"
+          [(ngModel)]="selectedStatut"
+          (change)="onFilterChange()">
+    <option value="">Tous</option>
+    <option value="EN_ATTENTE">EN_ATTENTE</option>
+    <option value="DISPONIBLE">DISPONIBLE</option>
+    <option value="ANNULEE">ANNULEE</option>
+    <option value="EXPIREE">EXPIREE</option>
+    <option value="HONOREE">HONOREE</option>
+  </select>
 </div>
 
-<div *ngIf="errorMessage" class="alert alert-danger">
-    {{ errorMessage }}
+<!-- Message d'erreur -->
+<div *ngIf="errorMessage" class="alert alert-danger error-alert" role="alert">
+  <i class="bi bi-exclamation-triangle-fill"></i> {{ errorMessage }}
+  <button class="btn btn-sm btn-outline-danger ms-2" (click)="onFilterChange()">
+    <i class="bi bi-arrow-clockwise"></i> Réessayer
+  </button>
 </div>
 
-<table class="table table-success table-striped">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Livre</th>
-            <th>Adhérent</th>
-            <th>Date Réservation</th>
-            <th>Date Expiration</th>
-            <th>Statut</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let reservation of reservations">
-            <td>{{ reservation.id }}</td>
-            <td>{{ reservation.livreName }} (ID: {{ reservation.livreId }})</td>
-            <td>{{ reservation.adherentName }} (ID: {{ reservation.adherentId }})</td>
-            <td>{{ reservation.dateReservation }}</td>
-            <td>{{ reservation.dateExpiration }}</td>
-            <td>{{ reservation.statut }}</td>
-            <td>
-                <button *ngIf="reservation.statut === 'EN_ATTENTE' || reservation.statut === 'DISPONIBLE'"
-                    (click)="annulerReservation(reservation.id)"
-                    class="btn btn-warning btn-sm">
-                    Annuler
-                </button>
-                <button (click)="deleteReservation(reservation.id)"
-                    class="btn btn-danger btn-sm">
-                    Supprimer
-                </button>
-            </td>
-        </tr>
-    </tbody>
+<!-- Loading -->
+<div *ngIf="isLoading" class="loading-overlay">
+  <i class="bi bi-arrow-repeat spinner-border" style="font-size: 3rem;" role="status"></i>
+  <p class="mt-2">Chargement des réservations...</p>
+</div>
+
+<!-- Liste vide -->
+<div *ngIf="!isLoading && !errorMessage && reservations.length === 0" class="empty-state">
+  <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+  <p><strong>Aucune réservation</strong></p>
+  <small>Il n'y a actuellement aucune réservation correspondant à ce filtre.</small>
+</div>
+
+<!-- Tableau des réservations -->
+<table *ngIf="!isLoading && !errorMessage && reservations.length > 0"
+      class="table table-striped table-hover align-middle">
+  <thead class="table-dark">
+    <tr>
+      <th scope="col">Livre</th>
+      <th scope="col">Adhérent</th>
+      <th scope="col">Statut</th>
+      <th scope="col">Date réservation</th>
+      <th scope="col">Date expiration</th>
+      <th scope="col" class="table-actions">Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let reservation of reservations">
+      <td>{{ reservation.livreName || '-' }} (ID: {{ reservation.livreId }})</td>
+      <td>{{ reservation.adherentName || '-' }} (ID: {{ reservation.adherentId }})</td>
+      <td>
+        <span class="badge status-badge badge-{{ reservation.statut }}"
+              [ngClass]="{'badge-EN_ATTENTE': reservation.statut === 'EN_ATTENTE',
+                           'badge-DISPONIBLE': reservation.statut === 'DISPONIBLE',
+                           'badge-ANNULEE': reservation.statut === 'ANNULEE',
+                           'badge-EXPIREE': reservation.statut === 'EXPIREE',
+                           'badge-HONOREE': reservation.statut === 'HONOREE'}">
+          {{ reservation.statut }}
+        </span>
+      </td>
+      <td>{{ formatDate(reservation.dateReservation) }}</td>
+      <td>{{ formatDate(reservation.dateExpiration) }}</td>
+      <td class="table-actions">
+        <button *ngIf="canCancel(reservation.statut)"
+                [disabled]="isCancelling"
+                (click)="onCancel(reservation.id)"
+                class="btn btn-warning btn-sm"
+                title="Annuler cette réservation">
+          <span *ngIf="isCancelling" class="spinner-border spinner-border-sm me-1"></span>
+          Annuler
+        </button>
+        <span *ngIf="!canCancel(reservation.statut)" class="text-muted fst-italic">—</span>
+      </td>
+    </tr>
+  </tbody>
 </table>

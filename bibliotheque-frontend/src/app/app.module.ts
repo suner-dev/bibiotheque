@@ -26,6 +26,8 @@ import { BorrowBookComponent } from './borrow-book/borrow-book.component';
 import { ReturnBookComponent } from './return-book/return-book.component';
 import { ReservationListComponent } from './reservation-list/reservation-list.component';
 import { CreateReservationComponent } from './create-reservation/create-reservation.component';
+import { ReservationContainerComponent } from './reservation-container/reservation-container.component';
+import { ReservationService } from './_service/reservation.service';
 
 @NgModule({
   declarations: [
@@ -47,6 +49,7 @@ import { CreateReservationComponent } from './create-reservation/create-reservat
     ReturnBookComponent,
     ReservationListComponent,
     CreateReservationComponent,
+    ReservationContainerComponent,
   ],
   imports: [
     BrowserModule,
@@ -63,7 +66,8 @@ import { CreateReservationComponent } from './create-reservation/create-reservat
       multi: true
     },
     UsersService,
-    BooksService
+    BooksService,
+    ReservationService,
    ],
   bootstrap: [AppComponent]
 })
