@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http'
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -28,6 +29,7 @@ import { ReservationListComponent } from './reservation-list/reservation-list.co
 import { CreateReservationComponent } from './create-reservation/create-reservation.component';
 import { ReservationContainerComponent } from './reservation-container/reservation-container.component';
 import { ReservationService } from './_service/reservation.service';
+import { ToastComponent } from './toast/toast.component';
 
 @NgModule({
   declarations: [
@@ -50,9 +52,11 @@ import { ReservationService } from './_service/reservation.service';
     ReservationListComponent,
     CreateReservationComponent,
     ReservationContainerComponent,
+    ToastComponent,
   ],
   imports: [
     BrowserModule,
+    BrowserAnimationsModule,
     AppRoutingModule,
     HttpClientModule,
     FormsModule,

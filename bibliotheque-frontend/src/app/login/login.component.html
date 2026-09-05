@@ -1,17 +1,50 @@
-<div class="container col-md-6 offset-mid-3">
-<form autocomplete="off" #loginForm="ngForm" (ngSubmit)="login(loginForm)">
-    <div *ngIf="errorMessage" class="alert alert-danger mt-3" role="alert">
-      <strong>Connexion impossible :</strong> {{ errorMessage }}
+<div class="login-wrapper animate-fade-in">
+  <div class="glass-card login-card">
+    <!-- Header -->
+    <div class="login-header">
+      <div class="login-icon">📚</div>
+      <h2 class="login-title">Bienvenue</h2>
+      <p class="login-subtitle">Connectez-vous à votre espace Bibliothèque</p>
     </div>
-    <div class="mb-3">
-      <label class="form-label" style="margin-top: 100px;">Username</label>
-      <input type="text" name="username" ngModel class="form-control" id="loginUsername" placeholder="Enter your username">
-      <div id="emailHelp" class="form-text">Username provided by the library admin.</div>
+
+    <!-- Login form -->
+    <form autocomplete="off" #loginForm="ngForm" (ngSubmit)="login(loginForm)">
+      <div class="form-group mb-3">
+        <label class="form-label">
+          <i class="bi bi-person me-1"></i> Nom d'utilisateur
+        </label>
+        <input type="text"
+               name="username"
+               ngModel
+               class="form-control"
+               placeholder="Entrez votre identifiant"
+               required>
+      </div>
+
+      <div class="form-group mb-4">
+        <label class="form-label">
+          <i class="bi bi-lock me-1"></i> Mot de passe
+        </label>
+        <input type="password"
+               name="password"
+               ngModel
+               class="form-control"
+               placeholder="Entrez votre mot de passe"
+               required>
+      </div>
+
+      <button type="submit" class="btn btn-3d w-100">
+        <i class="bi bi-box-arrow-in-right me-2"></i>
+        Connexion
+      </button>
+    </form>
+
+    <!-- Footer -->
+    <div class="login-footer">
+      <small class="text-muted">
+        <i class="bi bi-info-circle me-1"></i>
+        Les identifiants sont fournis par l'administrateur.
+      </small>
     </div>
-    <div class="mb-3">
-      <label class="form-label">Password</label>
-      <input type="password" name="password" ngModel class="form-control" id="loginPassword" placeholder="Enter your password">
-    </div>
-    <input type="submit" value="Login" class="btn btn-primary"/>
-  </form>
+  </div>
 </div>

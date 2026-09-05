@@ -1,53 +1,64 @@
-.reservation-page-title {
-  color: #2c3e50;
-  margin-bottom: 1.5rem;
+/* Reservation container styles */
+:host {
+  display: block;
 }
 
-.card-shadow {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+/* Detail grid layout */
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.25rem;
+  padding: 0.5rem 0;
 }
 
-.status-badge {
-  font-size: 0.85em;
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.25s ease;
+}
+
+.detail-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.detail-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #94a3b8);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+.detail-value {
+  font-size: 1.05rem;
   font-weight: 600;
-  padding: 0.4em 0.7em;
+  color: var(--text-primary, #f1f5f9);
 }
 
-/* Couleurs de statut */
-.badge-EN_ATTENTE { background-color: #ffc107; color: #212529; }
-.badge-DISPONIBLE { background-color: #17a2b8; color: #fff; }
-.badge-ANNULEE { background-color: #6c757d; color: #fff; }
-.badge-EXPIREE { background-color: #dc3545; color: #fff; }
-.badge-HONOREE { background-color: #28a745; color: #fff; }
-
-.table-actions .btn {
-  margin-right: 0.3rem;
+/* Row gaps */
+.row.g-4 > * {
+  padding-top: 0;
 }
 
-.empty-state {
-  text-align: center;
-  padding: 3rem 1rem;
-  color: #6c757d;
+/* Responsive */
+@media (max-width: 991.98px) {
+  .detail-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
-.empty-state i {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  display: block;
-}
+@media (max-width: 575.98px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
 
-.loading-overlay {
-  text-align: center;
-  padding: 3rem;
-  color: #6c757d;
-}
-
-.loading-overlay i {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  display: block;
-}
-
-.error-alert {
-  margin-bottom: 1rem;
+  .section-title {
+    font-size: 1rem;
+  }
 }

@@ -1,0 +1,71 @@
+/* User details styles */
+:host {
+  display: block;
+}
+
+/* Book icon */
+.book-icon {
+  font-size: 1.3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(99, 102, 241, 0.1);
+}
+
+/* Return status */
+.return-success {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3em 0.7em;
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.return-pending {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3em 0.7em;
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* Table styles */
+.table-responsive {
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+.table > thead > tr > th {
+  background: rgba(99, 102, 241, 0.1);
+  color: #818cf8;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.table > tbody > tr {
+  transition: all 0.25s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.table > tbody > tr:hover {
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.table > tbody > tr > td {
+  padding: 0.85rem 0.75rem;
+  vertical-align: middle;
+}

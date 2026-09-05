@@ -45,16 +45,20 @@ export class ReservationListComponent {
     return statut === 'EN_ATTENTE' || statut === 'DISPONIBLE';
   }
 
-    formatDate(dateVal: Date | string | any): string {
-        if (!dateVal) return '-';
+  formatStatut(statut: string): string {
+    const statutLabels: { [key: string]: string } = {
+      'EN_ATTENTE': 'En attente',
+      'DISPONIBLE': 'Disponible',
+      'ANNULEE': 'Annulée',
+      'EXPIREE': 'Expirée',
+      'HONOREE': 'Honorée'
+    };
+    return statutLabels[statut] || statut;
+  }
+
+  formatDate(dateVal: Date | string | any): string {
+    if (!dateVal) return '-';
     const d = new Date(dateVal);
-    return d.toLocaleString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
     return d.toLocaleString('fr-FR', {
       day: '2-digit',
       month: '2-digit',

@@ -1,25 +1,71 @@
-<h2>List of books to be returned</h2>
-<table class="table table-success table-striped">
-    <thead>
-        <tr>
-            <th> Book ID </th>
-            <th> Issue Date </th>
-            <th> Return Date </th>
-            <th> Overdue Date </th>
-            <th> Action </th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let b of borrow">
-            <td> {{ b.bookId }} </td>
-            <td> {{ b.issueDate }} </td>
-            <td> {{ b.returnDate }} </td>
-            <td> {{ b.dueDate }} </td>
+<div class="container-fluid py-4">
+  <div class="section-title animate-fade-in-up">
+    <span class="section-title-icon">📚</span>
+    <span>Livres à retourner</span>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="!borrow.length" class="text-center py-5 animate-fade-in">
+    <div class="loader-spinner mb-3"></div>
+    <p class="text-muted">Chargement des emprunts...</p>
+  </div>
+
+  <!-- Liste vide -->
+  <div *ngIf="borrow.length === 0" class="empty-state animate-fade-in-up">
+    <div class="empty-icon">📭</div>
+    <h4>Aucun livre à retourner</h4>
+    <p class="text-muted">Vous n'avez actuellement aucun livre emprunté.</p>
+  </div>
+
+  <!-- Tableau des emprunts -->
+  <div *ngIf="borrow.length > 0" class="glass-card overflow-hidden animate-fade-in-up delay-1">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th><i class="bi bi-upc me-1"></i> ID Emprunt</th>
+            <th><i class="bi bi-book me-1"></i> ID Livre</th>
+            <th><i class="bi bi-calendar me-1"></i> Date d'emprunt</th>
+            <th><i class="bi bi-calendar-check me-1"></i> Date de retour</th>
+            <th><i class="bi bi-calendar-event me-1"></i> Date limite</th>
+            <th class="text-center"><i class="bi bi-gear me-1"></i> Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let b of borrow; let i = index"
+              class="animate-fade-in-up"
+              [style.animation-delay]="(i * 0.05) + 's'">
+            <td><span class="badge bg-secondary">{{ b.borrowId }}</span></td>
             <td>
-                <div *ngIf="b.returnDate === null">
-                    <button (click) = "returnBook(b.borrowId)" class="btn btn-success"> Return </button>
-                </div>
+              <div class="d-flex align-items-center gap-2">
+                <span class="book-icon">📖</span>
+                <span class="fw-semibold">{{ b.bookId }}</span>
+              </div>
             </td>
-        </tr>
-    </tbody>
-</table>
+            <td>{{ b.issueDate }}</td>
+            <td>
+              <span *ngIf="b.returnDate !== null" class="return-success">
+                <i class="bi bi-check-circle me-1"></i> {{ b.returnDate }}
+              </span>
+              <span *ngIf="b.returnDate === null" class="return-pending">
+                <i class="bi bi-clock me-1"></i> Non retourné
+              </span>
+            </td>
+            <td>{{ b.dueDate }}</td>
+            <td class="text-center">
+              <div *ngIf="b.returnDate === null">
+                <button (click)="returnBook(b.borrowId)"
+                        class="btn btn-3d btn-3d-success btn-3d-sm">
+                  <i class="bi bi-arrow-return-left me-1"></i> Retourner
+                </button>
+              </div>
+              <div *ngIf="b.returnDate !== null" class="returned-badge">
+                <i class="bi bi-check2-all me-1"></i> Retourné
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

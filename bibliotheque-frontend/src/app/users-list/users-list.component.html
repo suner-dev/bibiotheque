@@ -1,29 +1,62 @@
-<h2>User List</h2>
-<table class="table table-success table-striped">
-    <thead>
-        <tr>
-            <th> User ID </th>
-            <th> Name </th>
-            <th> Username </th>
-            <th> Role </th>
-            <th> View History </th>
-            <th> Edit User </th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let user of users">
-            <td> {{ user.userId }} </td>
-            <td> {{ user.name }} </td>
-            <td> {{ user.username }} </td>
-            <td> {{ user.role[0].roleName }} </td>
-            <td>        
-                <div *ngIf="user.role[0].roleName === 'User'">
-                    <button (click) = "userDetails(user.userId)" class="btn btn-success"> View </button>
-                </div>
+<div class="container-fluid py-4">
+  <div class="section-title animate-fade-in-up">
+    <span class="section-title-icon">👥</span>
+    <span>Liste des utilisateurs</span>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="!users.length" class="text-center py-5 animate-fade-in">
+    <div class="loader-spinner mb-3"></div>
+    <p class="text-muted">Chargement des utilisateurs...</p>
+  </div>
+
+  <!-- Tableau des utilisateurs -->
+  <div *ngIf="users.length > 0" class="glass-card overflow-hidden animate-fade-in-up delay-1">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th><i class="bi bi-upc me-1"></i> ID</th>
+            <th><i class="bi bi-person me-1"></i> Nom</th>
+            <th><i class="bi bi-at me-1"></i> Nom d'utilisateur</th>
+            <th><i class="bi bi-shield me-1"></i> Rôle</th>
+            <th class="text-center"><i class="bi bi-gear me-1"></i> Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of users; let i = index"
+              class="animate-fade-in-up"
+              [style.animation-delay]="(i * 0.05) + 's'">
+            <td><span class="badge bg-secondary">{{ user.userId }}</span></td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <span class="user-icon">👤</span>
+                <span class="fw-semibold">{{ user.name }}</span>
+              </div>
+            </td>
+            <td>{{ user.username }}</td>
+            <td>
+              <span class="role-badge role-{{ user.role[0].roleName }}">
+                {{ user.role[0].roleName }}
+              </span>
             </td>
             <td>
-                <button (click) = "updateUser(user.userId)" class="btn btn-info"> Edit </button> 
+              <div class="d-flex justify-content-center gap-2 flex-wrap">
+                <div *ngIf="user.role[0].roleName === 'User'">
+                  <button (click)="userDetails(user.userId)"
+                          class="btn btn-3d btn-3d-info btn-3d-sm">
+                    <i class="bi bi-clock-history me-1"></i> Historique
+                  </button>
+                </div>
+                <button (click)="updateUser(user.userId)"
+                        class="btn btn-3d btn-3d-warning btn-3d-sm">
+                  <i class="bi bi-pencil me-1"></i> Modifier
+                </button>
+              </div>
             </td>
-        </tr>
-    </tbody>
-</table>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

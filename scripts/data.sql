@@ -6,7 +6,9 @@
 
 
 -- ------------------------------------------------------------
--- 1. LIVRES (Tous les livres sont indisponibles / no_of_copies = 0)
+-- 1. LIVRES
+--  L1-L4 : indisponibles (0 exemplaire) -> réservables (RG-01)
+--  L5    : DISPONIBLE (2 exemplaires)   -> empruntable / RG-01 si on le réserve
 -- ------------------------------------------------------------
 
 INSERT INTO books (
@@ -21,7 +23,7 @@ VALUES
     (1002, 'L2', 'Auteur L2', 'Test', 0),
     (1003, 'L3', 'Auteur L3', 'Test', 0),
     (1004, 'L4', 'Auteur L4', 'Test', 0),
-    (1005, 'L5', 'Auteur L5', 'Test', 0)
+    (1005, 'L5', 'Auteur L5', 'Test', 2)
     ON CONFLICT (book_id)
 DO UPDATE SET
     book_name = EXCLUDED.book_name,
@@ -78,9 +80,10 @@ DO NOTHING;
 
 
 -- ------------------------------------------------------------
--- 5. EMPRUNTS
--- A3 (user_id 2003) détient L1, L2, L3, L4 et L5.
--- return_date = NULL => emprunt non rendu
+-- 5. EMPRUNTS (historique d'emprunt)
+--  A3 (2003) : L1 actif, L2 actif             -> L1, L2 indisponibles
+--  A2 (2002) : L3 actif, L4 actif, + L5 rendu -> L3, L4 indisponibles, L5 rendu (dispo)
+--  A2 (2002) : L1 déjà rendu (historique ancien)
 -- ------------------------------------------------------------
 
 INSERT INTO borrow (
@@ -111,7 +114,7 @@ VALUES
     (
         3002,
         1003,
-        2003,
+        2002,
         CURRENT_TIMESTAMP - INTERVAL '3 days',
         NULL,
         CURRENT_TIMESTAMP + INTERVAL '11 days'
@@ -119,7 +122,7 @@ VALUES
     (
         3003,
         1004,
-        2003,
+        2002,
         CURRENT_TIMESTAMP - INTERVAL '2 days',
         NULL,
         CURRENT_TIMESTAMP + INTERVAL '12 days'
@@ -127,10 +130,18 @@ VALUES
     (
         3004,
         1005,
-        2003,
-        CURRENT_TIMESTAMP - INTERVAL '1 day',
-        NULL,
-        CURRENT_TIMESTAMP + INTERVAL '13 days'
+        2002,
+        CURRENT_TIMESTAMP - INTERVAL '20 days',
+        CURRENT_TIMESTAMP - INTERVAL '15 days',
+        CURRENT_TIMESTAMP - INTERVAL '13 days'
+    ),
+    (
+        3005,
+        1001,
+        2002,
+        CURRENT_TIMESTAMP - INTERVAL '40 days',
+        CURRENT_TIMESTAMP - INTERVAL '33 days',
+        CURRENT_TIMESTAMP - INTERVAL '31 days'
     )
     ON CONFLICT (borrow_id)
 DO UPDATE SET

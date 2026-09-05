@@ -4,6 +4,7 @@ import { Books } from '../_model/books';
 import { Users } from '../_model/users';
 import { ReservationRequest } from '../_model/reservation';
 import { ReservationService } from '../_service/reservation.service';
+import { ToastService } from '../_service/toast.service';
 
 @Component({
   selector: 'app-create-reservation',
@@ -19,11 +20,12 @@ export class CreateReservationComponent implements OnInit {
   @ViewChild('reservationForm') reservationForm?: NgForm;
 
   request: ReservationRequest = new ReservationRequest();
-  errorMessage: string = '';
-  successMessage: string = '';
   isSubmitting: boolean = false;
 
-  constructor(private reservationService: ReservationService) {}
+  constructor(
+    private reservationService: ReservationService,
+    private toastService: ToastService
+  ) {}
 
   ngOnInit(): void {
     this.request = new ReservationRequest();
@@ -35,8 +37,6 @@ export class CreateReservationComponent implements OnInit {
     }
 
     this.isSubmitting = true;
-    this.errorMessage = '';
-    this.successMessage = '';
 
     // ngModel fournit des strings : on normalise en nombres pour l'API
     const payload: ReservationRequest = {
@@ -47,17 +47,15 @@ export class CreateReservationComponent implements OnInit {
     this.reservationService.createReservation(payload).subscribe({
       next: () => {
         this.isSubmitting = false;
-        this.successMessage = 'Réservation créée avec succès !';
+        this.toastService.success('Réservation créée avec succès !', 'Réservation');
         // Réinitialisation canonique Angular : resynchronise le modèle ET les champs du DOM
         form.resetForm(new ReservationRequest());
-        setTimeout(() => {
-          this.successMessage = '';
-          this.reservationCreated.emit();
-        }, 1200);
+        this.reservationCreated.emit();
       },
       error: (err) => {
         this.isSubmitting = false;
-        this.errorMessage = this.parseError(err);
+        const msg = this.parseError(err);
+        this.toastService.error(msg, 'Erreur de réservation');
       }
     });
   }

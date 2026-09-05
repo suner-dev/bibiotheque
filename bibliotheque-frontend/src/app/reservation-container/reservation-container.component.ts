@@ -5,6 +5,7 @@ import { Users } from '../_model/users';
 import { ReservationService } from '../_service/reservation.service';
 import { BooksService } from '../_service/books.service';
 import { UsersService } from '../_service/users.service';
+import { ToastService } from '../_service/toast.service';
 
 @Component({
   selector: 'app-reservation-container',
@@ -30,7 +31,8 @@ export class ReservationContainerComponent implements OnInit {
   constructor(
     private reservationService: ReservationService,
     private booksService: BooksService,
-    private usersService: UsersService
+    private usersService: UsersService,
+    private toastService: ToastService
   ) {}
 
   ngOnInit(): void {
@@ -65,6 +67,7 @@ export class ReservationContainerComponent implements OnInit {
       error: (err) => {
         this.errorMessage = this.buildErrorMessage(err);
         this.isLoading = false;
+        this.toastService.error(this.errorMessage, 'Erreur de chargement');
       }
     });
   }
@@ -84,6 +87,7 @@ export class ReservationContainerComponent implements OnInit {
     this.reservationService.annulerReservation(id).subscribe({
       next: () => {
         this.isCancelling = false;
+        this.toastService.success('Réservation annulée avec succès.', 'Annulation');
         this.loadReservations();
         if (this.selectedReservation?.id === id) {
           this.onDetailsRequested(id);
@@ -91,7 +95,8 @@ export class ReservationContainerComponent implements OnInit {
       },
       error: (err) => {
         this.isCancelling = false;
-        this.errorMessage = this.buildErrorMessage(err);
+        const msg = this.buildErrorMessage(err);
+        this.toastService.error(msg, 'Annulation impossible');
       }
     });
   }
@@ -109,6 +114,7 @@ export class ReservationContainerComponent implements OnInit {
       error: (err) => {
         this.isLoadingDetails = false;
         this.detailsError = err?.error?.message || 'Impossible de charger le détail de la réservation.';
+        this.toastService.error(this.detailsError, 'Détail indisponible');
       }
     });
   }
@@ -123,13 +129,15 @@ export class ReservationContainerComponent implements OnInit {
     this.errorMessage = '';
     this.reservationService.deleteReservation(id).subscribe({
       next: () => {
+        this.toastService.success('Réservation supprimée définitivement.', 'Suppression');
         if (this.selectedReservation?.id === id) {
           this.closeDetails();
         }
         this.loadReservations();
       },
       error: (err) => {
-        this.errorMessage = this.buildErrorMessage(err);
+        const msg = this.buildErrorMessage(err);
+        this.toastService.error(msg, 'Suppression impossible');
       }
     });
   }

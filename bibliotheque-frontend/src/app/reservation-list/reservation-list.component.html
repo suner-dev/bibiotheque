@@ -1,88 +1,135 @@
-<h3 class="mb-3">Liste des réservations</h3>
+<div class="animate-fade-in-up">
+  <!-- Header avec filtre -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div class="section-title mb-0">
+      <span class="section-title-icon">📋</span>
+      <span>Liste des réservations</span>
+    </div>
+    <div class="filter-wrapper">
+      <label class="form-label mb-1">
+        <i class="bi bi-funnel me-1"></i> Filtrer par statut
+      </label>
+      <select class="form-select form-select-sm filter-select"
+              [(ngModel)]="selectedStatut"
+              (change)="onFilterChange()">
+        <option value="">Tous les statuts</option>
+        <option value="EN_ATTENTE">⏳ En attente</option>
+        <option value="DISPONIBLE">✅ Disponible</option>
+        <option value="ANNULEE">❌ Annulée</option>
+        <option value="EXPIREE">⏰ Expirée</option>
+        <option value="HONOREE">🏆 Honorée</option>
+      </select>
+    </div>
+  </div>
 
-<!-- Filtre par statut -->
-<div class="mb-3">
-  <label class="form-label" style="margin-bottom: 5px;"><strong>Filtrer par statut :</strong></label>
-  <select class="form-select"
-          [(ngModel)]="selectedStatut"
-          (change)="onFilterChange()">
-    <option value="">Tous</option>
-    <option value="EN_ATTENTE">EN_ATTENTE</option>
-    <option value="DISPONIBLE">DISPONIBLE</option>
-    <option value="ANNULEE">ANNULEE</option>
-    <option value="EXPIREE">EXPIREE</option>
-    <option value="HONOREE">HONOREE</option>
-  </select>
+  <!-- Message d'erreur -->
+  <div *ngIf="errorMessage" class="alert alert-danger animate-shake" role="alert">
+    <div class="d-flex align-items-center gap-2">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      <span>{{ errorMessage }}</span>
+      <button class="btn btn-3d btn-3d-sm btn-3d-secondary ms-auto" (click)="onFilterChange()">
+        <i class="bi bi-arrow-clockwise me-1"></i> Réessayer
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="text-center py-5 animate-fade-in">
+    <div class="loader-spinner mb-3"></div>
+    <p class="text-muted">Chargement des réservations...</p>
+  </div>
+
+  <!-- Liste vide -->
+  <div *ngIf="!isLoading && !errorMessage && reservations.length === 0" class="empty-state animate-fade-in-up">
+    <div class="empty-icon">📭</div>
+    <h4>Aucune réservation</h4>
+    <p class="text-muted">Il n'y a actuellement aucune réservation correspondant à ce filtre.</p>
+  </div>
+
+  <!-- Tableau des réservations -->
+  <div *ngIf="!isLoading && !errorMessage && reservations.length > 0" class="glass-card overflow-hidden animate-fade-in-up">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th scope="col">
+              <i class="bi bi-book me-1"></i> Livre
+            </th>
+            <th scope="col">
+              <i class="bi bi-person me-1"></i> Adhérent
+            </th>
+            <th scope="col">
+              <i class="bi bi-flag me-1"></i> Statut
+            </th>
+            <th scope="col" class="d-none d-md-table-cell">
+              <i class="bi bi-calendar me-1"></i> Réservation
+            </th>
+            <th scope="col" class="d-none d-lg-table-cell">
+              <i class="bi bi-calendar-event me-1"></i> Expiration
+            </th>
+            <th scope="col" class="text-center">
+              <i class="bi bi-gear me-1"></i> Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let reservation of reservations; let i = index"
+              class="animate-fade-in-up"
+              [style.animation-delay]="(i * 0.05) + 's'">
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <span class="book-icon">📖</span>
+                <div>
+                  <div class="fw-semibold">{{ reservation.livreName || 'N/A' }}</div>
+                  <small class="text-muted">ID: {{ reservation.livreId }}</small>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <span class="user-icon">👤</span>
+                <div>
+                  <div class="fw-semibold">{{ reservation.adherentName || 'N/A' }}</div>
+                  <small class="text-muted">ID: {{ reservation.adherentId }}</small>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="status-pill status-pill-{{ reservation.statut }}">
+                {{ formatStatut(reservation.statut) }}
+              </span>
+            </td>
+            <td class="d-none d-md-table-cell">
+              <small class="text-muted">{{ formatDate(reservation.dateReservation) }}</small>
+            </td>
+            <td class="d-none d-lg-table-cell">
+              <small class="text-muted">{{ formatDate(reservation.dateExpiration) }}</small>
+            </td>
+            <td>
+              <div class="d-flex justify-content-center gap-2 flex-wrap">
+                <button class="btn btn-3d btn-3d-info btn-3d-sm"
+                        (click)="onDetails(reservation.id)"
+                        title="Voir le détail">
+                  <i class="bi bi-eye"></i>
+                </button>
+                <button *ngIf="canCancel(reservation.statut)"
+                        [disabled]="isCancelling"
+                        (click)="onCancel(reservation.id)"
+                        class="btn btn-3d btn-3d-warning btn-3d-sm"
+                        title="Annuler cette réservation">
+                  <span *ngIf="isCancelling" class="loader-spinner loader-spinner-sm"></span>
+                  <i *ngIf="!isCancelling" class="bi bi-x-circle"></i>
+                </button>
+                <button class="btn btn-3d btn-3d-danger btn-3d-sm"
+                        (click)="onDelete(reservation.id)"
+                        title="Supprimer définitivement">
+                  <i class="bi bi-trash3"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </div>
-
-<!-- Message d'erreur -->
-<div *ngIf="errorMessage" class="alert alert-danger error-alert" role="alert">
-  <i class="bi bi-exclamation-triangle-fill"></i> {{ errorMessage }}
-  <button class="btn btn-sm btn-outline-danger ms-2" (click)="onFilterChange()">
-    <i class="bi bi-arrow-clockwise"></i> Réessayer
-  </button>
-</div>
-
-<!-- Loading -->
-<div *ngIf="isLoading" class="loading-overlay">
-  <i class="bi bi-arrow-repeat spinner-border" style="font-size: 3rem;" role="status"></i>
-  <p class="mt-2">Chargement des réservations...</p>
-</div>
-
-<!-- Liste vide -->
-<div *ngIf="!isLoading && !errorMessage && reservations.length === 0" class="empty-state">
-  <i class="bi bi-inbox" style="font-size: 3rem;"></i>
-  <p><strong>Aucune réservation</strong></p>
-  <small>Il n'y a actuellement aucune réservation correspondant à ce filtre.</small>
-</div>
-
-<!-- Tableau des réservations -->
-<table *ngIf="!isLoading && !errorMessage && reservations.length > 0"
-      class="table table-striped table-hover align-middle">
-  <thead class="table-dark">
-    <tr>
-      <th scope="col">Livre</th>
-      <th scope="col">Adhérent</th>
-      <th scope="col">Statut</th>
-      <th scope="col">Date réservation</th>
-      <th scope="col">Date expiration</th>
-      <th scope="col" class="table-actions">Action</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr *ngFor="let reservation of reservations">
-      <td>{{ reservation.livreName || '-' }} (ID: {{ reservation.livreId }})</td>
-      <td>{{ reservation.adherentName || '-' }} (ID: {{ reservation.adherentId }})</td>
-      <td>
-        <span class="badge status-badge badge-{{ reservation.statut }}"
-              [ngClass]="{'badge-EN_ATTENTE': reservation.statut === 'EN_ATTENTE',
-                           'badge-DISPONIBLE': reservation.statut === 'DISPONIBLE',
-                           'badge-ANNULEE': reservation.statut === 'ANNULEE',
-                           'badge-EXPIREE': reservation.statut === 'EXPIREE',
-                           'badge-HONOREE': reservation.statut === 'HONOREE'}">
-          {{ reservation.statut }}
-        </span>
-      </td>
-      <td>{{ formatDate(reservation.dateReservation) }}</td>
-      <td>{{ formatDate(reservation.dateExpiration) }}</td>
-      <td class="table-actions">
-        <button class="btn btn-info btn-sm me-1" (click)="onDetails(reservation.id)" title="Voir le détail">
-          Détails
-        </button>
-        <button *ngIf="canCancel(reservation.statut)"
-                [disabled]="isCancelling"
-                (click)="onCancel(reservation.id)"
-                class="btn btn-warning btn-sm me-1"
-                title="Annuler cette réservation">
-          <span *ngIf="isCancelling" class="spinner-border spinner-border-sm me-1"></span>
-          Annuler
-        </button>
-        <button class="btn btn-danger btn-sm"
-                (click)="onDelete(reservation.id)"
-                title="Supprimer définitivement cette réservation">
-          Supprimer
-        </button>
-      </td>
-    </tr>
-  </tbody>
-</table>
