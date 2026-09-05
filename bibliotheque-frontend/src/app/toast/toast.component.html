@@ -1,0 +1,27 @@
+<div class="toast-container">
+  <div *ngFor="let toast of toasts"
+       class="toast-item toast-{{ toast.type }}"
+       [@toastAnimation]>
+    <!-- Barre de couleur à gauche -->
+    <div class="toast-bar"></div>
+
+    <!-- Icône -->
+    <div class="toast-icon">
+      <i class="bi" [ngClass]="getIcon(toast.type)"></i>
+    </div>
+
+    <!-- Contenu -->
+    <div class="toast-content">
+      <div class="toast-title">{{ getTitle(toast) }}</div>
+      <div class="toast-message">{{ toast.message }}</div>
+    </div>
+
+    <!-- Bouton fermer -->
+    <button class="toast-close" (click)="dismiss(toast.id)" aria-label="Fermer">
+      <i class="bi bi-x-lg"></i>
+    </button>
+
+    <!-- Barre de progression (auto-dismiss) -->
+    <div class="toast-progress" [style.animation-duration]="toast.duration + 'ms'"></div>
+  </div>
+</div>
