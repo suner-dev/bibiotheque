@@ -6,6 +6,7 @@ import com.ibizabroker.bibliotheque.dao.UsersRepository;
 import com.ibizabroker.bibliotheque.dto.ReservationRequest;
 import com.ibizabroker.bibliotheque.dto.ReservationResponse;
 import com.ibizabroker.bibliotheque.entity.Books;
+import com.ibizabroker.bibliotheque.entity.Reservation;
 import com.ibizabroker.bibliotheque.entity.ReservationStatus;
 import com.ibizabroker.bibliotheque.entity.Users;
 import com.ibizabroker.bibliotheque.exceptions.ConflictException;
@@ -39,6 +40,9 @@ public class ReservationServiceTest {
 
     @Mock
     private UsersRepository usersRepository;
+
+    @Mock
+    private CurrentUserService currentUserService;
 
     @InjectMocks
     private ReservationService reservationService;
@@ -221,9 +225,10 @@ public class ReservationServiceTest {
         reservation.setAdherent(user);
 
         when(reservationRepository.findById(1)).thenReturn(Optional.of(reservation));
+        when(currentUserService.isAdherent()).thenReturn(false);
         when(reservationRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ReservationResponse response = reservationService.annulerReservation(1);
+        ReservationResponse response = reservationService.annulerReservation(1, currentUserService);
 
         assertEquals(ReservationStatus.ANNULEE, response.getStatut());
     }
@@ -237,9 +242,10 @@ public class ReservationServiceTest {
         reservation.setAdherent(user);
 
         when(reservationRepository.findById(1)).thenReturn(Optional.of(reservation));
+        when(currentUserService.isAdherent()).thenReturn(false);
         when(reservationRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        ReservationResponse response = reservationService.annulerReservation(1);
+        ReservationResponse response = reservationService.annulerReservation(1, currentUserService);
 
         assertEquals(ReservationStatus.ANNULEE, response.getStatut());
     }
@@ -253,9 +259,10 @@ public class ReservationServiceTest {
         reservation.setAdherent(user);
 
         when(reservationRepository.findById(1)).thenReturn(Optional.of(reservation));
+        when(currentUserService.isAdherent()).thenReturn(false);
 
         ConflictException exception = assertThrows(ConflictException.class,
-                () -> reservationService.annulerReservation(1));
+                () -> reservationService.annulerReservation(1, currentUserService));
         assertTrue(exception.getMessage().contains("RG-05"));
     }
 
@@ -268,9 +275,10 @@ public class ReservationServiceTest {
         reservation.setAdherent(user);
 
         when(reservationRepository.findById(1)).thenReturn(Optional.of(reservation));
+        when(currentUserService.isAdherent()).thenReturn(false);
 
         ConflictException exception = assertThrows(ConflictException.class,
-                () -> reservationService.annulerReservation(1));
+                () -> reservationService.annulerReservation(1, currentUserService));
         assertTrue(exception.getMessage().contains("RG-05"));
     }
 
@@ -283,16 +291,17 @@ public class ReservationServiceTest {
         reservation.setAdherent(user);
 
         when(reservationRepository.findById(1)).thenReturn(Optional.of(reservation));
+        when(currentUserService.isAdherent()).thenReturn(false);
 
         ConflictException exception = assertThrows(ConflictException.class,
-                () -> reservationService.annulerReservation(1));
+                () -> reservationService.annulerReservation(1, currentUserService));
         assertTrue(exception.getMessage().contains("RG-05"));
     }
 
     @Test
     void annulerReservation_NotFound_ThrowsNotFound() {
         when(reservationRepository.findById(999)).thenReturn(Optional.empty());
-        assertThrows(NotFoundException.class, () -> reservationService.annulerReservation(999));
+        assertThrows(NotFoundException.class, () -> reservationService.annulerReservation(999, currentUserService));
     }
 
     @Test
@@ -304,13 +313,13 @@ public class ReservationServiceTest {
 
         when(reservationRepository.findById(1)).thenReturn(Optional.of(reservation));
 
-        assertDoesNotThrow(() -> reservationService.deleteReservation(1));
+        assertDoesNotThrow(() -> reservationService.deleteReservation(1, currentUserService));
     }
 
     @Test
     void deleteReservation_NotFound_ThrowsNotFound() {
         when(reservationRepository.findById(999)).thenReturn(Optional.empty());
-        assertThrows(NotFoundException.class, () -> reservationService.deleteReservation(999));
+        assertThrows(NotFoundException.class, () -> reservationService.deleteReservation(999, currentUserService));
     }
 
     @Test
@@ -374,5 +383,115 @@ public class ReservationServiceTest {
 
         assertEquals(1, count);
         assertEquals(ReservationStatus.EXPIREE, reservation.getStatut());
+    }
+
+    // ==================== TESTS RG-03 (Limite 3 réservations actives) ====================
+
+    /**
+     * RG-03 - CAS 1: Un adhérent possède 2 réservations actives.
+     * → la troisième réservation est autorisée.
+     */
+    @Test
+    void shouldAllowThirdActiveReservationWhenAdherentHasTwoActiveReservations() {
+        // Given: adhérent avec 2 réservations actives
+        when(booksRepository.findByIdForUpdate(1)).thenReturn(Optional.of(book));
+        when(usersRepository.findByIdForUpdate(1)).thenReturn(Optional.of(user));
+        when(reservationRepository.existsByAdherentUserIdAndLivreBookIdAndStatutIn(
+                anyInt(), anyInt(), any())).thenReturn(false);
+        // RG-03: 2 réservations actives (en dessous de la limite de 3)
+        when(reservationRepository.countByAdherentUserIdAndStatutIn(anyInt(), any())).thenReturn(2L);
+        when(reservationRepository.save(any())).thenAnswer(invocation -> {
+            var reservation = invocation.getArgument(0);
+            var field = reservation.getClass().getDeclaredField("id");
+            field.setAccessible(true);
+            field.set(reservation, 1);
+            return reservation;
+        });
+
+        // When: création d'une troisième réservation
+        ReservationResponse response = reservationService.createReservation(request);
+
+        // Then: la réservation est créée avec succès
+        assertNotNull(response);
+        assertEquals(ReservationStatus.EN_ATTENTE, response.getStatut());
+        assertEquals(1, response.getAdherentId());
+    }
+
+    /**
+     * RG-03 - CAS 2: Un adhérent possède déjà 3 réservations actives.
+     * → la création de la 4ème réservation est refusée.
+     */
+    @Test
+    void shouldRejectReservationWhenAdherentAlreadyHasThreeActiveReservations() {
+        // Given: adhérent avec 3 réservations actives (limite atteinte)
+        when(booksRepository.findByIdForUpdate(1)).thenReturn(Optional.of(book));
+        when(usersRepository.findByIdForUpdate(1)).thenReturn(Optional.of(user));
+        when(reservationRepository.existsByAdherentUserIdAndLivreBookIdAndStatutIn(
+                anyInt(), anyInt(), any())).thenReturn(false);
+        // RG-03: 3 réservations actives (limite atteinte)
+        when(reservationRepository.countByAdherentUserIdAndStatutIn(anyInt(), any())).thenReturn(3L);
+
+        // When/Then: la création doit être refusée avec ConflictException
+        ConflictException exception = assertThrows(ConflictException.class,
+                () -> reservationService.createReservation(request));
+        assertTrue(exception.getMessage().contains("RG-03"));
+    }
+
+    /**
+     * RG-03 - CAS 3 (aux limites): Un adhérent possède 0 réservation active.
+     * → la première réservation est autorisée.
+     */
+    @Test
+    void shouldAllowFirstReservationWhenAdherentHasNoActiveReservations() {
+        // Given: adhérent sans réservation active
+        when(booksRepository.findByIdForUpdate(1)).thenReturn(Optional.of(book));
+        when(usersRepository.findByIdForUpdate(1)).thenReturn(Optional.of(user));
+        when(reservationRepository.existsByAdherentUserIdAndLivreBookIdAndStatutIn(
+                anyInt(), anyInt(), any())).thenReturn(false);
+        // RG-03: 0 réservation active
+        when(reservationRepository.countByAdherentUserIdAndStatutIn(anyInt(), any())).thenReturn(0L);
+        when(reservationRepository.save(any())).thenAnswer(invocation -> {
+            var reservation = invocation.getArgument(0);
+            var field = reservation.getClass().getDeclaredField("id");
+            field.setAccessible(true);
+            field.set(reservation, 1);
+            return reservation;
+        });
+
+        // When: création de la première réservation
+        ReservationResponse response = reservationService.createReservation(request);
+
+        // Then: la réservation est créée avec succès
+        assertNotNull(response);
+        assertEquals(ReservationStatus.EN_ATTENTE, response.getStatut());
+    }
+
+    /**
+     * RG-03 - CAS 4 (aux limites): Un adhérent possède 1 réservation active.
+     * → la deuxième réservation est autorisée.
+     */
+    @Test
+    void shouldAllowSecondReservationWhenAdherentHasOneActiveReservation() {
+        // Given: adhérent avec 1 réservation active
+        when(booksRepository.findByIdForUpdate(1)).thenReturn(Optional.of(book));
+        when(usersRepository.findByIdForUpdate(1)).thenReturn(Optional.of(user));
+        when(reservationRepository.existsByAdherentUserIdAndLivreBookIdAndStatutIn(
+                anyInt(), anyInt(), any())).thenReturn(false);
+        // RG-03: 1 réservation active
+        when(reservationRepository.countByAdherentUserIdAndStatutIn(anyInt(), any())).thenReturn(1L);
+        when(reservationRepository.save(any())).thenAnswer(invocation -> {
+            var reservation = invocation.getArgument(0);
+            var field = reservation.getClass().getDeclaredField("id");
+            field.setAccessible(true);
+            field.set(reservation, 1);
+            return reservation;
+        });
+
+        // When: création de la deuxième réservation
+        ReservationResponse response = reservationService.createReservation(request);
+
+        // Then: la réservation est créée avec succès
+        assertNotNull(response);
+        assertEquals(ReservationStatus.EN_ATTENTE, response.getStatut());
     }
 }
