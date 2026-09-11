@@ -8,6 +8,7 @@ import com.ibizabroker.bibliotheque.dto.ReservationRequest;
 import com.ibizabroker.bibliotheque.dto.ReservationResponse;
 import com.ibizabroker.bibliotheque.entity.*;
 import com.ibizabroker.bibliotheque.exceptions.ConflictException;
+import com.ibizabroker.bibliotheque.exceptions.ForbiddenException;
 import com.ibizabroker.bibliotheque.exceptions.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+/**
+ * Service de gestion des réservations.
+ *
+ * Implémente les règles de sécurité RS-01 à RS-05:
+ * - RS-01: Authentification requise (géré par Spring Security)
+ * - RS-02: Seul BIBLIOTHECAIRE peut supprimer (géré par @PreAuthorize)
+ * - RS-03: ADHERENT ne peut voir/modifier que ses propres réservations
+ * - RS-04: L'identité vient du token, pas du body
+ * - RS-05: Filtrage côté backend (ADHERENT voit uniquement ses réservations)
+ */
 @Service
 public class ReservationService {
 
@@ -97,19 +109,30 @@ public class ReservationService {
         return toResponse(saved);
     }
 
-    public List<ReservationResponse> getAllReservations(ReservationStatus statut, Integer adherentId) {
+    /**
+     * RS-05 : Retourne les réservations selon le rôle de l'utilisateur authentifié.
+     * - BIBLIOTHECAIRE : toutes les réservations (avec filtres optionnels)
+     * - ADHERENT : uniquement ses propres réservations
+     */
+    public List<ReservationResponse> getAllReservations(ReservationStatus statut, Integer adherentId,
+                                                        CurrentUserService currentUserService) {
         // RG-06 : met à jour les réservations périmées avant toute lecture
         expirerReservationsPerimees();
 
         List<Reservation> reservations;
 
-        if (statut != null && adherentId != null) {
+        // RS-05 : Filtrage côté backend selon le rôle
+        if (currentUserService.isAdherent()) {
+            // ADHERENT : voit uniquement ses propres réservations
+            reservations = reservationRepository.findByAdherentUserId(currentUserService.getCurrentUserId());
+        } else if (statut != null && adherentId != null) {
             reservations = reservationRepository.findByAdherentUserIdAndStatut(adherentId, statut);
         } else if (statut != null) {
             reservations = reservationRepository.findByStatut(statut);
         } else if (adherentId != null) {
             reservations = reservationRepository.findByAdherentUserId(adherentId);
         } else {
+            // BIBLIOTHECAIRE sans filtre : toutes les réservations
             reservations = reservationRepository.findAll();
         }
 
@@ -118,19 +141,40 @@ public class ReservationService {
                 .collect(Collectors.toList());
     }
 
-    public ReservationResponse getReservationById(Integer id) {
+    /**
+     * RS-03 : Retourne une réservation par son ID.
+     * - BIBLIOTHECAIRE : peut voir n'importe quelle réservation
+     * - ADHERENT : ne peut voir que ses propres réservations
+     */
+    public ReservationResponse getReservationById(Integer id, CurrentUserService currentUserService) {
         // RG-06 : met à jour les réservations périmées avant toute lecture
         expirerReservationsPerimees();
 
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Reservation with id " + id + " does not exist."));
+
+        // RS-03 : Vérification de propriété pour ADHERENT
+        if (currentUserService.isAdherent() && !reservation.getAdherent().getUserId().equals(currentUserService.getCurrentUserId())) {
+            throw new ForbiddenException("RS-03 : cette réservation ne vous appartient pas.");
+        }
+
         return toResponse(reservation);
     }
 
+    /**
+     * RS-03 : Annule une réservation.
+     * - BIBLIOTHECAIRE : peut annuler n'importe quelle réservation
+     * - ADHERENT : ne peut annuler que ses propres réservations
+     */
     @Transactional
-    public ReservationResponse annulerReservation(Integer id) {
+    public ReservationResponse annulerReservation(Integer id, CurrentUserService currentUserService) {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Reservation with id " + id + " does not exist."));
+
+        // RS-03 : Vérification de propriété pour ADHERENT
+        if (currentUserService.isAdherent() && !reservation.getAdherent().getUserId().equals(currentUserService.getCurrentUserId())) {
+            throw new ForbiddenException("RS-03 : cette réservation ne vous appartient pas.");
+        }
 
         // RG-05: Can only cancel EN_ATTENTE or DISPONIBLE
         if (!ACTIVE_STATUSES.contains(reservation.getStatut())) {
@@ -142,10 +186,16 @@ public class ReservationService {
         return toResponse(updated);
     }
 
+    /**
+     * RS-02 : Supprime une réservation.
+     * - BIBLIOTHECAIRE : peut supprimer n'importe quelle réservation
+     * - ADHERENT : ne peut pas supprimer (bloqué par @PreAuthorize)
+     */
     @Transactional
-    public void deleteReservation(Integer id) {
+    public void deleteReservation(Integer id, CurrentUserService currentUserService) {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Reservation with id " + id + " does not exist."));
+        // RS-02 : La vérification du rôle est faite par @PreAuthorize("hasRole('Admin')")
         reservationRepository.delete(reservation);
     }
 
