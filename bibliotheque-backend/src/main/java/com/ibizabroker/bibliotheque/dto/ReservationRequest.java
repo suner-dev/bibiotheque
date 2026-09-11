@@ -5,6 +5,14 @@ import lombok.Data;
 
 import javax.validation.constraints.NotNull;
 
+/**
+ * DTO d'entrée pour la création d'une réservation.
+ *
+ * RS-04 : adherentId est optionnel dans le body.
+ * - Pour un ADHERENT, l'identité est déduite du token JWT (adherentId ignoré).
+ * - Pour un BIBLIOTHECAIRE, adherentId peut être fourni pour créer une réservation
+ *   au nom d'un autre adhérent.
+ */
 @Data
 @Schema(description = "DTO d'entrée pour la création d'une réservation")
 public class ReservationRequest {
@@ -13,7 +21,6 @@ public class ReservationRequest {
     @Schema(description = "Identifiant du livre à réserver", example = "1")
     private Integer livreId;
 
-    @NotNull(message = "adherentId is required")
-    @Schema(description = "Identifiant de l'adhérent effectuant la réservation", example = "1")
+    @Schema(description = "Identifiant de l'adhérent (optionnel: déduit du token pour les adhérents)", example = "1")
     private Integer adherentId;
 }
