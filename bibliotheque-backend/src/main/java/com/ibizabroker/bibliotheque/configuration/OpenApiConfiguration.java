@@ -8,6 +8,12 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Configuration OpenAPI/Swagger avec support de l'authentification JWT.
+ *
+ * Le bouton "Authorize" dans Swagger UI permet de saisir le token JWT.
+ * Format: collez la valeur de jwtToken (sans le préfixe "Bearer").
+ */
 @Configuration
 public class OpenApiConfiguration {
 
@@ -17,16 +23,23 @@ public class OpenApiConfiguration {
     public OpenAPI bibliothequeOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("API Bibliothèque")
+                        .title("API Bibliothèque - Module Réservation Sécurisé")
                         .version("v1")
-                        .description("Gestion des livres, des emprunts et des réservations."))
+                        .description("API de gestion de bibliothèque avec sécurité JWT.\n\n"
+                                + "**Authentification** : Utilisez POST /authenticate pour obtenir un token JWT.\n"
+                                + "**Rôles** : Admin (BIBLIOTHECAIRE) et User (ADHERENT).\n"
+                                + "**Sécurité** : Les endpoints /api/reservations/** nécessitent un token valide."))
                 .components(new Components().addSecuritySchemes(SECURITY_SCHEME_NAME,
                         new SecurityScheme()
                                 .type(SecurityScheme.Type.HTTP)
                                 .scheme("bearer")
                                 .bearerFormat("JWT")
-                                .description("Récupérez un token via POST /authenticate, "
-                                        + "puis collez la valeur de jwtToken ici (sans le préfixe Bearer).")))
+                                .description("1. Appelez POST /authenticate avec username/password\n"
+                                        + "2. Copiez la valeur de jwtToken dans la réponse\n"
+                                        + "3. Collez-la ici (sans le préfixe Bearer)\n\n"
+                                        + "**Rôles disponibles** :\n"
+                                        + "- Admin (BIBLIOTHECAIRE) : accès complet\n"
+                                        + "- User (ADHERENT) : accès à ses propres données")))
                 .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME));
     }
 }
