@@ -9,6 +9,7 @@ import com.ibizabroker.bibliotheque.entity.Role;
 import com.ibizabroker.bibliotheque.entity.Users;
 import com.ibizabroker.bibliotheque.dao.BooksRepository;
 import com.ibizabroker.bibliotheque.dao.ReservationRepository;
+import com.ibizabroker.bibliotheque.dao.RoleRepository;
 import com.ibizabroker.bibliotheque.dao.UsersRepository;
 import com.ibizabroker.bibliotheque.service.JwtService;
 import com.ibizabroker.bibliotheque.util.JwtUtil;
@@ -21,6 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
@@ -37,6 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Transactional
 public class ReservationSecurityIntegrationTest {
 
     @Autowired
@@ -58,6 +61,9 @@ public class ReservationSecurityIntegrationTest {
     private ReservationRepository reservationRepository;
 
     @Autowired
+    private RoleRepository roleRepository;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
     private String tokenAdherent;
@@ -73,18 +79,19 @@ public class ReservationSecurityIntegrationTest {
         reservationRepository.deleteAll();
         usersRepository.deleteAll();
         booksRepository.deleteAll();
+        roleRepository.deleteAll();
 
-        // Créer les rôles (nouveaux, la cascade via Users va les persister)
-        Role userRole = new Role();
+        // Créer et sauvegarder les rôles d'abord
+        Role userRole = roleRepository.save(new Role());
         userRole.setRoleName("User");
 
-        Role adminRole = new Role();
+        Role adminRole = roleRepository.save(new Role());
         adminRole.setRoleName("Admin");
 
         // Créer les utilisateurs avec les rôles
-        adherent1 = createUser("adherent1", "Adhérent 1", userRole);
-        adherent2 = createUser("adherent2", "Adhérent 2", userRole);
-        bibliothecaire = createUser("biblio", "Bibliothécaire", adminRole);
+        adherent1 = createUser("adherent1", "Adhérent 1", userRole.getRoleId());
+        adherent2 = createUser("adherent2", "Adhérent 2", userRole.getRoleId());
+        bibliothecaire = createUser("biblio", "Bibliothécaire", adminRole.getRoleId());
 
         // Créer un livre indisponible
         livreIndisponible = new Books();
@@ -101,12 +108,13 @@ public class ReservationSecurityIntegrationTest {
         tokenBibliothecaire = jwtUtil.generateToken(adminDetails);
     }
 
-    private Users createUser(String username, String name, Role role) {
+    private Users createUser(String username, String name, Integer roleId) {
         Users user = new Users();
         user.setUsername(username);
         user.setPassword("password");
         user.setName(name);
         Set<Role> roles = new HashSet<>();
+        Role role = roleRepository.findById(roleId).orElseThrow();
         roles.add(role);
         user.setRole(roles);
         return usersRepository.save(user);
@@ -234,8 +242,9 @@ public class ReservationSecurityIntegrationTest {
                 .getResponse()
                 .getContentAsString();
 
-        assertTrue(responseJson.contains(String.valueOf(res1.getId())));
-        assertFalse(responseJson.contains(String.valueOf(res2.getId())));
+        // Check for the full "id":1 pattern to avoid false matches on dates
+        assertTrue(responseJson.contains("\"id\":" + res1.getId()));
+        assertFalse(responseJson.contains("\"id\":" + res2.getId()));
     }
 
     @Test
@@ -252,9 +261,15 @@ public class ReservationSecurityIntegrationTest {
     // ==================== Expiration du token ====================
 
     @Test
-    void expiredTokenReturns401WithExpirationMessage() throws Exception {
+    void expiredOrInvalidTokenReturns401() throws Exception {
+        // Test with malformed token (should return 401)
         mockMvc.perform(get("/api/reservations")
-                        .header("Authorization", "Bearer invalid.expired.token"))
+                        .header("Authorization", "Bearer invalid.token"))
+                .andExpect(status().isUnauthorized());
+        
+        // Test with completely invalid token (should return 401)
+        mockMvc.perform(get("/api/reservations")
+                        .header("Authorization", "Bearer not.a.valid.jwt"))
                 .andExpect(status().isUnauthorized());
     }
 
