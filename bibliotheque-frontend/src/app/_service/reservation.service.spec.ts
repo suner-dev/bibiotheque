@@ -1,16 +1,16 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { BorrowService } from './borrow.service';
+import { ReservationService } from './reservation.service';
 
-describe('BorrowService', () => {
-  let service: BorrowService;
+describe('ReservationService', () => {
+  let service: ReservationService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [BorrowService]
+      providers: [ReservationService]
     });
-    service = TestBed.inject(BorrowService);
+    service = TestBed.inject(ReservationService);
   });
 
   it('should be created', () => {
@@ -18,6 +18,6 @@ describe('BorrowService', () => {
   });
 
   it('should define baseURL', () => {
-    expect(BorrowService).toBeDefined();
+    expect(ReservationService).toBeDefined();
   });
 });
