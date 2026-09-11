@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http'
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -24,6 +25,11 @@ import { AuthInterceptor } from './_auth/auth.interceptor';
 import { ForbiddenComponent } from './forbidden/forbidden.component';
 import { BorrowBookComponent } from './borrow-book/borrow-book.component';
 import { ReturnBookComponent } from './return-book/return-book.component';
+import { ReservationListComponent } from './reservation-list/reservation-list.component';
+import { CreateReservationComponent } from './create-reservation/create-reservation.component';
+import { ReservationContainerComponent } from './reservation-container/reservation-container.component';
+import { ReservationService } from './_service/reservation.service';
+import { ToastComponent } from './toast/toast.component';
 
 @NgModule({
   declarations: [
@@ -43,9 +49,14 @@ import { ReturnBookComponent } from './return-book/return-book.component';
     ForbiddenComponent,
     BorrowBookComponent,
     ReturnBookComponent,
+    ReservationListComponent,
+    CreateReservationComponent,
+    ReservationContainerComponent,
+    ToastComponent,
   ],
   imports: [
     BrowserModule,
+    BrowserAnimationsModule,
     AppRoutingModule,
     HttpClientModule,
     FormsModule,
@@ -59,7 +70,8 @@ import { ReturnBookComponent } from './return-book/return-book.component';
       multi: true
     },
     UsersService,
-    BooksService
+    BooksService,
+    ReservationService,
    ],
   bootstrap: [AppComponent]
 })

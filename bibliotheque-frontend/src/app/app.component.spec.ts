@@ -1,16 +1,26 @@
 import { TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { AppComponent } from './app.component';
+import { ToastComponent } from './toast/toast.component';
+import { HeaderComponent } from './header/header.component';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [
-        RouterTestingModule
+        RouterTestingModule,
+        BrowserAnimationsModule,
+        HttpClientTestingModule,
       ],
       declarations: [
-        AppComponent
+        AppComponent,
+        ToastComponent,
+        HeaderComponent,
       ],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA],
     }).compileComponents();
   });
 
@@ -23,7 +33,7 @@ describe('AppComponent', () => {
   it(`should have as title 'bibliotheque-frontend'`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.title).toEqual('bibliotheque-frontend');
+    expect(app.title).toEqual('Library Management System');
   });
 
   it('should render title', () => {

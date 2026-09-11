@@ -1,0 +1,65 @@
+<div class="glass-card p-4 animate-fade-in-up">
+  <div class="section-title">
+    <span class="section-title-icon">📅</span>
+    <span>Créer une réservation</span>
+  </div>
+
+  <!-- Indicateur de chargement des listes -->
+  <div *ngIf="!books.length || !users.length" class="text-center py-5">
+    <div class="loader-spinner mb-3"></div>
+    <p class="text-muted">Chargement des données...</p>
+  </div>
+
+  <form *ngIf="books.length && users.length"
+        (ngSubmit)="onSubmit(reservationForm)" autocomplete="off"
+        #reservationForm="ngForm">
+
+    <!-- Livre -->
+    <div class="form-group mb-3">
+      <label class="form-label">
+        <i class="bi bi-book me-1"></i> Livre
+      </label>
+      <select class="form-select"
+              [(ngModel)]="request.livreId"
+              name="livreId"
+              required>
+        <option value="" disabled selected>-- Sélectionner un livre --</option>
+        <option *ngFor="let book of books" [value]="book.bookId">
+          {{ book.bookName }} — {{ book.bookAuthor }} ({{ book.noOfCopies }} exemplaire(s))
+        </option>
+      </select>
+    </div>
+
+    <!-- RS-04 : Adhérent - masqué pour les ADHERENT (identité depuis token) -->
+    <!-- Seul le BIBLIOTHECAIRE peut choisir un adhérent pour la réservation -->
+    <div class="form-group mb-4" *ngIf="isBibliothecaire()">
+      <label class="form-label">
+        <i class="bi bi-person me-1"></i> Adhérent
+      </label>
+      <select class="form-select"
+              [(ngModel)]="request.adherentId"
+              name="adherentId"
+              required>
+        <option value="" disabled selected>-- Sélectionner un adhérent --</option>
+        <option *ngFor="let user of users" [value]="user.userId">
+          {{ user.name }} — {{ user.username }}
+        </option>
+      </select>
+    </div>
+
+    <!-- RS-04 : Pour un ADHERENT, afficher un message indiquant que c'est pour lui -->
+    <div class="alert alert-info mb-3" *ngIf="!isBibliothecaire()">
+      <i class="bi bi-info-circle me-2"></i>
+      La réservation sera créée pour votre compte ({{ getCurrentAdherentId() }}).
+    </div>
+
+    <!-- Bouton de soumission -->
+    <button type="submit"
+            class="btn btn-3d btn-3d-success w-100"
+            [disabled]="reservationForm.invalid || isSubmitting">
+      <span *ngIf="isSubmitting" class="loader-spinner loader-spinner-sm me-2"></span>
+      <i *ngIf="!isSubmitting" class="bi bi-plus-circle me-2"></i>
+      {{ isSubmitting ? 'Création en cours...' : 'Créer la réservation' }}
+    </button>
+  </form>
+</div>

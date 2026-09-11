@@ -1,0 +1,122 @@
+/* Reservation list styles */
+:host {
+  display: block;
+}
+
+/* Filter wrapper */
+.filter-wrapper {
+  min-width: 200px;
+}
+
+.filter-select {
+  min-width: 180px;
+}
+
+/* Table responsive */
+.table-responsive {
+  border-radius: var(--radius-lg, 22px);
+  overflow: hidden;
+}
+
+.table {
+  margin-bottom: 0;
+}
+
+.table > thead > tr > th {
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--accent-bright, #818cf8);
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.table > tbody > tr {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.table > tbody > tr:hover {
+  background: rgba(99, 102, 241, 0.08);
+  transform: scale(1.005);
+}
+
+.table > tbody > tr > td {
+  padding: 0.85rem 0.75rem;
+  vertical-align: middle;
+}
+
+/* Book and user icons */
+.book-icon, .user-icon {
+  font-size: 1.3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.book-icon {
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.user-icon {
+  background: rgba(6, 182, 212, 0.1);
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  animation: floatY 3s ease-in-out infinite;
+}
+
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.empty-state h4 {
+  color: var(--text-primary, #f1f5f9);
+  margin-bottom: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 767.98px) {
+  .table > thead > tr > th,
+  .table > tbody > tr > td {
+    padding: 0.65rem 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .section-title {
+    font-size: 1.1rem;
+  }
+
+  .section-title-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .filter-wrapper {
+    width: 100%;
+  }
+
+  .filter-select {
+    width: 100%;
+  }
+}

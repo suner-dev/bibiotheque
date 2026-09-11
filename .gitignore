@@ -1,2 +1,5 @@
 # Réglages locaux des outils
 .claude/
+.idea/
+logs/
+.pids/

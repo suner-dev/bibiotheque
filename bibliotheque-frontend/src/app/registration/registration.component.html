@@ -1,27 +1,53 @@
-<div class="container col-md-6 offset-mid-3">
-    <h3 class="text-center"> Add User </h3>
-    <form (ngSubmit) = "onSubmit()" autocomplete="off">
+<div class="form-wrapper animate-fade-in">
+  <div class="glass-card form-card">
+    <div class="section-title">
+      <span class="section-title-icon">✨</span>
+      <span>Enregistrer un utilisateur</span>
+    </div>
 
-        <div class="form-group">
-            <label style="margin-bottom: 10px"> Name </label>
-            <input type="text" class="form-control" style="margin-bottom: 10px" id="name" [(ngModel)] = "user.name" name="name">
-        </div>
+    <form (ngSubmit)="onSubmit()" autocomplete="off">
+      <div class="form-group mb-3">
+        <label class="form-label">
+          <i class="bi bi-person me-1"></i> Nom complet
+        </label>
+        <input type="text" class="form-control" id="name"
+               [(ngModel)]="user.name" name="name"
+               placeholder="Entrez le nom complet" required>
+      </div>
 
-        <div class="form-group">
-            <label style="margin-bottom: 10px"> Username </label>
-            <input type="text" class="form-control" style="margin-bottom: 10px" id="username" [(ngModel)] = "user.username" name="username">
-        </div>
+      <div class="form-group mb-3">
+        <label class="form-label">
+          <i class="bi bi-at me-1"></i> Nom d'utilisateur
+        </label>
+        <input type="text" class="form-control" id="username"
+               [(ngModel)]="user.username" name="username"
+               placeholder="Entrez le nom d'utilisateur" required>
+      </div>
 
-        <div class="form-group">
-            <label style="margin-bottom: 10px"> Password </label>
-            <input type="password" class="form-control" style="margin-bottom: 10px" id="password" [(ngModel)] = "user.password" name="password">
-        </div>
+      <div class="form-group mb-3">
+        <label class="form-label">
+          <i class="bi bi-lock me-1"></i> Mot de passe
+        </label>
+        <input type="password" class="form-control" id="password"
+               [(ngModel)]="user.password" name="password"
+               placeholder="Entrez le mot de passe" required>
+      </div>
 
-        <div class="form-group">
-            <label style="margin-bottom: 10px"> Role (Admin, User) </label>
-            <input type="text" class="form-control" style="margin-bottom: 10px" id="role" [(ngModel)] = "user.role[0].roleName" name="role">
-        </div>
+      <div class="form-group mb-4">
+        <label class="form-label">
+          <i class="bi bi-shield me-1"></i> Rôle
+        </label>
+        <select class="form-select" id="role"
+                [(ngModel)]="user.role[0].roleName" name="role" required>
+          <option value="" disabled selected>Sélectionner un rôle</option>
+          <option value="Admin">Admin</option>
+          <option value="User">User</option>
+        </select>
+      </div>
 
-        <button class="btn btn-success" type="submit"> Submit </button>
+      <button type="submit" class="btn btn-3d btn-3d-success w-100">
+        <i class="bi bi-person-plus me-2"></i> Enregistrer l'utilisateur
+      </button>
     </form>
+  </div>
 </div>

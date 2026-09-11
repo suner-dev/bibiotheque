@@ -30,8 +30,10 @@ Application full-stack de gestion de bibliothèque : **Spring Boot** (API REST) 
 5. [Créer le premier compte](#5-créer-le-premier-compte)
 6. [Le trajet d'une donnée : du clic à la base](#6-le-trajet-dune-donnée--du-clic-à-la-base)
 7. [Les API](#7-les-api)
-8. [Rappel Git](#8-rappel-git)
-9. [Captures d'écran](#9-captures-décran)
+8. [Sécurité du module Réservation](#8-sécurité-du-module-réservation)
+9. [Accès de connexion en local](#9-accès-de-connexion-en-local)
+10. [Rappel Git](#10-rappel-git)
+11. [Captures d'écran](#11-captures-décran)
 
 ---
 
@@ -354,7 +356,155 @@ Base : `http://localhost:8080`
 
 ---
 
-## 8. Rappel Git
+## 8. Sécurité du module Réservation
+
+### Architecture de sécurité
+
+```
+FRONTEND (Angular)
+   ↓
+Login → JWT
+   ↓
+Authorization: Bearer <token>
+   ↓
+SPRING SECURITY
+   ↓
+Authentification (JwtRequestFilter)
+   ↓
+Autorisation (@PreAuthorize)
+   ↓
+CONTROLLER
+   ↓
+SERVICE (CurrentUserService)
+   ↓
+VÉRIFICATION DE PROPRIÉTÉ (RS-03)
+   ↓
+REPOSITORY
+   ↓
+POSTGRESQL
+```
+
+### Règles de sécurité implémentées
+
+| Règle | Description | Implémentation |
+|-------|-------------|----------------|
+| **RS-01** | Authentification obligatoire | `/api/reservations/**` retiré de `permitAll()` |
+| **RS-02** | Autorisation par rôle | `@PreAuthorize("hasRole('Admin')")` sur DELETE |
+| **RS-03** | Protection par propriété | Vérification `adherentId == currentUserId` dans le service |
+| **RS-04** | Identité depuis token | `adherentId` ignoré du body pour ADHERENT |
+| **RS-05** | Filtrage backend | `findByAdherentUserId(currentUserId)` pour ADHERENT |
+
+### Matrice des autorisations
+
+| Endpoint | Anonyme | ADHERENT | BIBLIOTHECAIRE |
+|----------|---------|----------|----------------|
+| POST /api/reservations | 401 | OUI (pour lui-même) | OUI (pour tous) |
+| GET /api/reservations | 401 | OUI (ses réservations) | OUI (toutes) |
+| GET /api/reservations/{id} | 401 | OUI (si propriétaire) | OUI (toutes) |
+| PATCH /api/reservations/{id}/annuler | 401 | OUI (si propriétaire) | OUI (toutes) |
+| DELETE /api/reservations/{id} | 401 | 403 | OUI |
+
+### Différence 401 / 403
+
+- **401 Unauthorized** : "Je ne sais pas qui vous êtes" → token absent, invalide ou expiré
+- **403 Forbidden** : "Je sais qui vous êtes, mais vous n'avez pas le droit" → rôle insuffisant ou ressource appartenant à un autre
+
+### Composants de sécurité
+
+| Composant | Rôle |
+|-----------|------|
+| `CurrentUserService` | Extrait l'identité du token JWT |
+| `CustomAccessDeniedHandler` | Gère les erreurs 403 (JSON structuré) |
+| `JwtAuthenticationEntryPoint` | Gère les erreurs 401 (JSON structuré) |
+| `ForbiddenException` | Exception métier 403 |
+| `AuthInterceptor` (Angular) | Ajoute le token, gère 401/403 |
+
+### Tests de sécurité
+
+```bash
+# Lancer tous les tests
+./mvnw test
+
+# Tests unitaires RG-03 (4 tests)
+- shouldAllowThirdActiveReservationWhenAdherentHasTwoActiveReservations
+- shouldRejectReservationWhenAdherentAlreadyHasThreeActiveReservations
+- shouldAllowFirstReservationWhenAdherentHasNoActiveReservations
+- shouldAllowSecondReservationWhenAdherentHasOneActiveReservation
+
+# Tests d'intégration sécurité (10 tests)
+- unauthenticatedRequestReturns401
+- invalidTokenReturns401
+- unauthenticatedPostReturns401
+- unauthenticatedDeleteReturns401
+- unauthenticatedPatchReturns401
+- adherentCannotDeleteReservation
+- deleteWithoutAdminRoleReturns403
+- authenticatedAdherentCanAccessGetReservations
+- authenticatedBibliothecaireCanAccessGetReservations
+- authenticatedBibliothecaireCanDeleteReservation
+```
+
+### Scénario de démonstration
+
+1. **Sans authentification** : `GET /api/reservations` → 401
+2. **Connexion ADHERENT A** : `GET /api/reservations` → 200 (ses réservations uniquement)
+3. **ADHERENT A accède à réservation de B** → 403
+4. **ADHERENT A tente DELETE** → 403
+5. **ADHERENT A envoie adherentId frauduleux** → ignoré, identité du token utilisée
+6. **Connexion BIBLIOTHECAIRE** : `GET /api/reservations` → 200 (toutes)
+7. **BIBLIOTHECAIRE supprime** → 204
+
+---
+
+## 9. Accès de connexion en local
+
+### Comptes de démonstration
+
+Les comptes suivants sont créés dans la base PostgreSQL locale (mots de passe réinitialisés pour la soutenance) :
+
+| Username | Mot de passe | Rôle | Description |
+|----------|--------------|------|-------------|
+| `a1` | `admin123` | **Admin** (BIBLIOTHECAIRE) | Peut tout voir, tout annuler, tout supprimer |
+| `a2` | `user123` | **User** (ADHERENT) | Adhérent A - peut réserver et consulter ses réservations |
+| `a3` | `user123` | **User** (ADHERENT) | Adhérent B - peut réserver et consulter ses réservations |
+
+> **Astuce** : créez d'autres comptes via `POST /admin/users` ou l'interface admin.
+
+### Créer un compte via l'API
+
+```bash
+# Créer un admin
+curl -X POST http://localhost:8087/admin/users \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","name":"Administrateur","password":"admin123","role":[{"roleName":"Admin"}]}'
+
+# Créer un adhérent
+curl -X POST http://localhost:8087/admin/users \
+  -H "Content-Type: application/json" \
+  -d '{"username":"adherent1","name":"Adhérent Un","password":"user123","role":[{"roleName":"User"}]}'
+```
+
+### Se connecter
+
+1. Ouvrez http://localhost:4200
+2. Cliquez sur "Connexion"
+3. Entrez vos identifiants
+4. Vous serez redirigé selon votre rôle :
+   - **Admin** → Liste des livres
+   - **User** → Page d'emprunt
+
+### Versions et compatibilité
+
+| Composant | Version | Note |
+|-----------|---------|------|
+| Spring Boot | 3.3.5 | Migré depuis 2.4.5 pour compatibilité Java 17+ (testé sur Java 26) |
+| jjwt | 0.12.6 | Migré depuis 0.9.1 (`javax.xml.bind` retiré de Java 11+) - algorithme HS256 |
+| Lombok | 1.18.38 | Compatible Java 26 |
+| javax.* → jakarta.* | — | Imports JavaEE remplacés par Jakarta EE (Spring Boot 3.x) |
+
+---
+
+## 10. Rappel Git
 
 Le cycle complet, dans l'ordre, à savoir refaire sans regarder :
 
@@ -393,7 +543,7 @@ Quelques réflexes :
 
 ---
 
-## 9. Captures d'écran
+## 11. Captures d'écran
 
 ### Accueil et connexion
 

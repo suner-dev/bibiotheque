@@ -1,23 +1,48 @@
-<h2>Borrow history of {{ book.bookName }}</h2>
-<table class="table table-info table-striped">
-    <thead>
-        <tr>
-            <th> User ID </th>
-            <th> Issue Date </th>
-            <th> Return Date </th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let borrower of borrow">
-            <!-- <td> {{ getUserData(borrower.userId) }} </td> -->
-            <td> {{ borrower.userId }} </td>
-            <td> {{ borrower.issueDate }} </td>
-            <div *ngIf="borrower.returnDate != null">
-                <td> {{ borrower.returnDate }} </td>
-            </div>
-            <div *ngIf="borrower.returnDate === null">
-                <td> Book not returned yet </td>
-            </div>
-        </tr>
-    </tbody>
-</table>
+<div class="container-fluid py-4">
+  <div class="section-title animate-fade-in-up">
+    <span class="section-title-icon">📖</span>
+    <span>Historique d'emprunt — {{ book.bookName }}</span>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="!borrow.length" class="text-center py-5 animate-fade-in">
+    <div class="loader-spinner mb-3"></div>
+    <p class="text-muted">Chargement de l'historique...</p>
+  </div>
+
+  <!-- Tableau -->
+  <div *ngIf="borrow.length > 0" class="glass-card overflow-hidden animate-fade-in-up delay-1">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th><i class="bi bi-person me-1"></i> ID Utilisateur</th>
+            <th><i class="bi bi-calendar me-1"></i> Date d'emprunt</th>
+            <th><i class="bi bi-calendar-check me-1"></i> Date de retour</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let borrower of borrow; let i = index"
+              class="animate-fade-in-up"
+              [style.animation-delay]="(i * 0.05) + 's'">
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <span class="user-icon">👤</span>
+                <span class="fw-semibold">{{ borrower.userId }}</span>
+              </div>
+            </td>
+            <td>{{ borrower.issueDate }}</td>
+            <td>
+              <span *ngIf="borrower.returnDate != null" class="return-success">
+                <i class="bi bi-check-circle me-1"></i> {{ borrower.returnDate }}
+              </span>
+              <span *ngIf="borrower.returnDate === null" class="return-pending">
+                <i class="bi bi-clock me-1"></i> Non retourné
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,180 @@
+import { Component, OnInit } from '@angular/core';
+import { Reservation } from '../_model/reservation';
+import { Books } from '../_model/books';
+import { Users } from '../_model/users';
+import { ReservationService } from '../_service/reservation.service';
+import { BooksService } from '../_service/books.service';
+import { UsersService } from '../_service/users.service';
+import { ToastService } from '../_service/toast.service';
+
+@Component({
+  selector: 'app-reservation-container',
+  templateUrl: './reservation-container.component.html',
+    styleUrls: ['./reservation-container.component.css']
+})
+export class ReservationContainerComponent implements OnInit {
+
+  reservations: Reservation[] = [];
+  books: Books[] = [];
+  users: Users[] = [];
+
+  // Panneau de détail (GET /api/reservations/{id})
+  selectedReservation: Reservation | null = null;
+  isLoadingDetails = false;
+  detailsError = '';
+
+  isLoading = true;
+  isCancelling = false;
+  errorMessage = '';
+  selectedStatut = '';
+
+  constructor(
+    private reservationService: ReservationService,
+    private booksService: BooksService,
+    private usersService: UsersService,
+    private toastService: ToastService
+  ) {}
+
+  ngOnInit(): void {
+    this.loadBooks();
+    this.loadUsers();
+    this.loadReservations();
+  }
+
+  loadBooks(): void {
+    this.booksService.getBooksList().subscribe({
+      next: (data) => this.books = data,
+      error: (err) => console.error('Erreur chargement livres:', err)
+    });
+  }
+
+  loadUsers(): void {
+    this.usersService.getUsersList().subscribe({
+      next: (data) => this.users = data,
+      error: (err) => console.error('Erreur chargement utilisateurs:', err)
+    });
+  }
+
+  loadReservations(): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+    const statut = this.selectedStatut || undefined;
+    this.reservationService.getReservations(statut).subscribe({
+      next: (data) => {
+        this.reservations = data;
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.errorMessage = this.buildErrorMessage(err);
+        this.isLoading = false;
+        this.toastService.error(this.errorMessage, 'Erreur de chargement');
+      }
+    });
+  }
+
+  onFilterChange(statut: string): void {
+    this.selectedStatut = statut;
+    this.loadReservations();
+  }
+
+  onReservationCreated(): void {
+    this.loadReservations();
+  }
+
+  onCancelReservation(id: number): void {
+    this.isCancelling = true;
+    this.errorMessage = '';
+    this.reservationService.annulerReservation(id).subscribe({
+      next: () => {
+        this.isCancelling = false;
+        this.toastService.success('Réservation annulée avec succès.', 'Annulation');
+        this.loadReservations();
+        if (this.selectedReservation?.id === id) {
+          this.onDetailsRequested(id);
+        }
+      },
+      error: (err) => {
+        this.isCancelling = false;
+        const msg = this.buildErrorMessage(err);
+        this.toastService.error(msg, 'Annulation impossible');
+      }
+    });
+  }
+
+  /** Consomme GET /api/reservations/{id} via le service */
+  onDetailsRequested(id: number): void {
+    this.isLoadingDetails = true;
+    this.detailsError = '';
+    this.selectedReservation = null;
+    this.reservationService.getReservationById(id).subscribe({
+      next: (data) => {
+        this.selectedReservation = data;
+        this.isLoadingDetails = false;
+      },
+      error: (err) => {
+        this.isLoadingDetails = false;
+        this.detailsError = err?.error?.message || 'Impossible de charger le détail de la réservation.';
+        this.toastService.error(this.detailsError, 'Détail indisponible');
+      }
+    });
+  }
+
+  closeDetails(): void {
+    this.selectedReservation = null;
+    this.detailsError = '';
+  }
+
+  /** Consomme DELETE /api/reservations/{id} via le service */
+  onDeleteReservation(id: number): void {
+    this.errorMessage = '';
+    this.reservationService.deleteReservation(id).subscribe({
+      next: () => {
+        this.toastService.success('Réservation supprimée définitivement.', 'Suppression');
+        if (this.selectedReservation?.id === id) {
+          this.closeDetails();
+        }
+        this.loadReservations();
+      },
+      error: (err) => {
+        const msg = this.buildErrorMessage(err);
+        this.toastService.error(msg, 'Suppression impossible');
+      }
+    });
+  }
+
+  retryDetails(): void {
+    if (this.selectedReservation) {
+      this.onDetailsRequested(this.selectedReservation.id);
+    }
+  }
+
+  retry(): void {
+    this.loadReservations();
+  }
+
+  /**
+   * Construit un message d'erreur approprié selon le code HTTP.
+   *
+   * 401 : Session expirée
+   * 403 : Accès refusé (pas les droits)
+   * 409 : Conflit métier
+   */
+  private buildErrorMessage(err: any): string {
+    if (!err) {
+      return 'Une erreur inconnue est survenue.';
+    }
+    if (err.status === 0) {
+      return 'Impossible de contacter le serveur. Vérifiez que le backend est bien démarré (port 8087).';
+    }
+    if (err.status === 401) {
+      return 'Votre session a expiré. Veuillez vous reconnecter.';
+    }
+    if (err.status === 403) {
+      return 'Vous n\'avez pas les droits nécessaires pour effectuer cette action.';
+    }
+    if (err.status === 409) {
+      return err.error?.message || 'Conflit métier : cette réservation ne peut pas être annulée.';
+    }
+    return err.error?.message || 'Erreur lors du chargement des réservations.';
+  }
+}

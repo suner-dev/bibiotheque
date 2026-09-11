@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Users } from '../_model/users';
 import { UsersService } from '../_service/users.service';
+import { ToastService } from '../_service/toast.service';
 
 @Component({
   selector: 'app-users-list',
@@ -10,26 +11,25 @@ import { UsersService } from '../_service/users.service';
 })
 export class UsersListComponent implements OnInit {
 
-  users: Users[];
+  users: Users[] = [];
 
-  constructor(private usersService: UsersService,
-    private router: Router) { }
+  constructor(
+    private usersService: UsersService,
+    private router: Router,
+    private toastService: ToastService
+  ) { }
 
   ngOnInit(): void {
     this.getUsers();
-    // this.users = [{
-    //   "userId": 1,
-    //   "name": "tarun",
-    //   "username": "tarungowda",
-    //   "role": "STUDENT",
-    //   "password": "sdklfjlakdsf"
-    // }]
   }
 
   private getUsers() {
-    this.usersService.getUsersList().subscribe(data =>{
-      this.users = data;
-      console.log(this.users);
+    this.usersService.getUsersList().subscribe({
+      next: (data) => this.users = data,
+      error: (err) => {
+        const msg = this.buildErrorMessage(err);
+        this.toastService.error(msg, 'Erreur de chargement');
+      }
     });
   }
 
@@ -41,4 +41,9 @@ export class UsersListComponent implements OnInit {
     this.router.navigate(['update-user', userId ]);
   }
 
+  private buildErrorMessage(err: any): string {
+    if (!err) return 'Une erreur inconnue est survenue.';
+    if (err.status === 0) return 'Impossible de contacter le serveur. Vérifiez que le backend est démarré.';
+    return err.error?.message || `Erreur (code ${err.status ?? 'inconnu'}).`;
+  }
 }

@@ -5,9 +5,11 @@ import com.ibizabroker.bibliotheque.entity.JwtResponse;
 import com.ibizabroker.bibliotheque.service.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 
 @RestController
 @CrossOrigin
+@SecurityRequirements
 //@RequestMapping("/")
 public class JwtController {
 

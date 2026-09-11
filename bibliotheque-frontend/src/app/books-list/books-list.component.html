@@ -1,27 +1,66 @@
-<h2>Book List</h2>
-<table class="table table-success table-striped">
-    <thead>
-        <tr>
-            <th> Book ID </th>
-            <th> Name </th>
-            <th> Author </th>
-            <th> Genre </th>
-            <th> Number of copies available </th>
-            <th> Actions </th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr *ngFor="let book of books">
-            <td> {{ book.bookId }} </td>
-            <td> {{ book.bookName }} </td>
-            <td> {{ book.bookAuthor }} </td>
-            <td> {{ book.bookGenre }} </td>
-            <td> {{ book.noOfCopies }} </td>
+<div class="container-fluid py-4">
+  <div class="section-title animate-fade-in-up">
+    <span class="section-title-icon">📖</span>
+    <span>Catalogue des livres</span>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="!books.length" class="text-center py-5 animate-fade-in">
+    <div class="loader-spinner mb-3"></div>
+    <p class="text-muted">Chargement des livres...</p>
+  </div>
+
+  <!-- Tableau des livres -->
+  <div *ngIf="books.length > 0" class="glass-card overflow-hidden animate-fade-in-up delay-1">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead>
+          <tr>
+            <th><i class="bi bi-upc me-1"></i> ID</th>
+            <th><i class="bi bi-book me-1"></i> Nom</th>
+            <th><i class="bi bi-person me-1"></i> Auteur</th>
+            <th><i class="bi bi-tag me-1"></i> Genre</th>
+            <th><i class="bi bi-collection me-1"></i> Exemplaires</th>
+            <th class="text-center"><i class="bi bi-gear me-1"></i> Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let book of books; let i = index"
+              class="animate-fade-in-up"
+              [style.animation-delay]="(i * 0.05) + 's'">
+            <td><span class="badge bg-secondary">{{ book.bookId }}</span></td>
             <td>
-                <button (click) = "bookDetails(book.bookId)" class="btn btn-success"> View </button>
-                <button (click) = "updateBook(book.bookId)" class="btn btn-info"  style="margin-left: 10px"> Edit </button>
-                <button (click) = "deleteBook(book.bookId)" class="btn btn-danger" style="margin-left: 10px"> Delete </button>                
+              <div class="d-flex align-items-center gap-2">
+                <span class="book-icon">📖</span>
+                <span class="fw-semibold">{{ book.bookName }}</span>
+              </div>
             </td>
-        </tr>
-    </tbody>
-</table>
+            <td>{{ book.bookAuthor }}</td>
+            <td><span class="genre-badge">{{ book.bookGenre }}</span></td>
+            <td>
+              <span class="copies-count" [class.copies-none]="book.noOfCopies === 0">
+                {{ book.noOfCopies }}
+              </span>
+            </td>
+            <td>
+              <div class="d-flex justify-content-center gap-2 flex-wrap">
+                <button (click)="bookDetails(book.bookId)"
+                        class="btn btn-3d btn-3d-info btn-3d-sm">
+                  <i class="bi bi-eye me-1"></i> Détails
+                </button>
+                <button (click)="updateBook(book.bookId)"
+                        class="btn btn-3d btn-3d-warning btn-3d-sm">
+                  <i class="bi bi-pencil me-1"></i> Modifier
+                </button>
+                <button (click)="deleteBook(book.bookId)"
+                        class="btn btn-3d btn-3d-danger btn-3d-sm">
+                  <i class="bi bi-trash3 me-1"></i> Supprimer
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,86 @@
+<div class="container-fluid py-4">
+  <!-- Panneau de détail -->
+  <div *ngIf="isLoadingDetails || detailsError || selectedReservation"
+       class="glass-card p-4 mb-4 animate-scale">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div class="section-title mb-0">
+        <span class="section-title-icon">📄</span>
+        <span>Détail de la réservation</span>
+      </div>
+      <button *ngIf="!isLoadingDetails" class="btn btn-3d btn-3d-secondary btn-3d-sm" (click)="closeDetails()">
+        <i class="bi bi-x-lg me-1"></i> Fermer
+      </button>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoadingDetails" class="text-center py-4">
+      <div class="loader-spinner mb-2"></div>
+      <p class="text-muted">Chargement du détail...</p>
+    </div>
+
+    <!-- Erreur -->
+    <div *ngIf="detailsError && !isLoadingDetails" class="alert alert-danger animate-shake">
+      <div class="d-flex align-items-center gap-2">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span>{{ detailsError }}</span>
+        <button class="btn btn-3d btn-3d-sm btn-3d-secondary ms-auto" (click)="retryDetails()">
+          <i class="bi bi-arrow-clockwise me-1"></i> Réessayer
+        </button>
+      </div>
+    </div>
+
+    <!-- Détails -->
+    <div *ngIf="selectedReservation && !isLoadingDetails" class="detail-grid animate-fade-in">
+      <div class="detail-item">
+        <span class="detail-label">📖 Livre</span>
+        <span class="detail-value">{{ selectedReservation.livreName }}</span>
+        <small class="text-muted">ID: {{ selectedReservation.livreId }}</small>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">👤 Adhérent</span>
+        <span class="detail-value">{{ selectedReservation.adherentName }}</span>
+        <small class="text-muted">ID: {{ selectedReservation.adherentId }}</small>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">🏷️ Statut</span>
+        <span class="status-pill status-pill-{{ selectedReservation.statut }}">
+          {{ selectedReservation.statut }}
+        </span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">📅 Réservé le</span>
+        <span class="detail-value">{{ selectedReservation.dateReservation | date:'dd/MM/yyyy HH:mm' }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">⏰ Expire le</span>
+        <span class="detail-value">{{ selectedReservation.dateExpiration | date:'dd/MM/yyyy HH:mm' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Formulaire de création -->
+    <div class="col-lg-4">
+      <app-create-reservation
+        [books]="books"
+        [users]="users"
+        (reservationCreated)="onReservationCreated()">
+      </app-create-reservation>
+    </div>
+
+    <!-- Liste des réservations -->
+    <div class="col-lg-8">
+      <app-reservation-list
+        [reservations]="reservations"
+        [isLoading]="isLoading"
+        [isCancelling]="isCancelling"
+        [errorMessage]="errorMessage"
+        [selectedStatut]="selectedStatut"
+        (filterChange)="onFilterChange($event)"
+        (cancelRequested)="onCancelReservation($event)"
+        (detailsRequested)="onDetailsRequested($event)"
+        (deleteRequested)="onDeleteReservation($event)">
+      </app-reservation-list>
+    </div>
+  </div>
+</div>
