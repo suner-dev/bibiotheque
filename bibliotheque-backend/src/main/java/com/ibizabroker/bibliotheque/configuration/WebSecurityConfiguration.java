@@ -3,6 +3,7 @@ package com.ibizabroker.bibliotheque.configuration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -12,6 +13,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 /**
  * Configuration de sécurité Spring Security (Spring Boot 3.x).
@@ -48,7 +54,10 @@ public class WebSecurityConfiguration {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.cors(cors -> cors.disable())
+        // CORS : activer le CorsFilter de Spring Security avec le bean CorsConfigurationSource.
+        // CRUCIAL : le preflight OPTIONS du navigateur doit passer AVANT tout contrôle d'authentification,
+        // sinon le frontend (http://localhost:4200) ne peut jamais appeler le backend (401 sur OPTIONS).
+        http.cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 // RS-01 : Seuls les endpoints publics sont en permitAll()
                 // Les endpoints /api/reservations/** nécessitent maintenant une authentification
@@ -71,6 +80,25 @@ public class WebSecurityConfiguration {
 
         http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
+    }
+
+    /**
+     * Configuration CORS utilisée par le CorsFilter de Spring Security.
+     * Le preflight OPTIONS est autorisé pour l'origine du frontend Angular.
+     */
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("http://localhost:4200"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "No-Auth"));
+        configuration.setExposedHeaders(List.of("Authorization"));
+        configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
     @Bean
