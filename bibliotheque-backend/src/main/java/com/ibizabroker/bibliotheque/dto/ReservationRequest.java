@@ -3,7 +3,7 @@ package com.ibizabroker.bibliotheque.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * DTO d'entrée pour la création d'une réservation.

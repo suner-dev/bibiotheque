@@ -460,13 +460,15 @@ POSTGRESQL
 
 ### Comptes de démonstration
 
-Après le premier lancement de l'application, créez les comptes suivants via l'interface d'administration ou via l'API :
+Les comptes suivants sont créés dans la base PostgreSQL locale (mots de passe réinitialisés pour la soutenance) :
 
 | Username | Mot de passe | Rôle | Description |
 |----------|--------------|------|-------------|
-| `admin` | `admin123` | **Admin** (BIBLIOTHECAIRE) | Accès complet à toutes les fonctionnalités |
-| `adherent1` | `user123` | **User** (ADHERENT) | Adhérent A - peut réserver et consulter ses réservations |
-| `adherent2` | `user123` | **User** (ADHERENT) | Adhérent B - peut réserver et consulter ses réservations |
+| `a1` | `admin123` | **Admin** (BIBLIOTHECAIRE) | Peut tout voir, tout annuler, tout supprimer |
+| `a2` | `user123` | **User** (ADHERENT) | Adhérent A - peut réserver et consulter ses réservations |
+| `a3` | `user123` | **User** (ADHERENT) | Adhérent B - peut réserver et consulter ses réservations |
+
+> **Astuce** : créez d'autres comptes via `POST /admin/users` ou l'interface admin.
 
 ### Créer un compte via l'API
 
@@ -490,6 +492,15 @@ curl -X POST http://localhost:8087/admin/users \
 4. Vous serez redirigé selon votre rôle :
    - **Admin** → Liste des livres
    - **User** → Page d'emprunt
+
+### Versions et compatibilité
+
+| Composant | Version | Note |
+|-----------|---------|------|
+| Spring Boot | 3.3.5 | Migré depuis 2.4.5 pour compatibilité Java 17+ (testé sur Java 26) |
+| jjwt | 0.12.6 | Migré depuis 0.9.1 (`javax.xml.bind` retiré de Java 11+) - algorithme HS256 |
+| Lombok | 1.18.38 | Compatible Java 26 |
+| javax.* → jakarta.* | — | Imports JavaEE remplacés par Jakarta EE (Spring Boot 3.x) |
 
 ---
 
