@@ -152,12 +152,25 @@ export class ReservationContainerComponent implements OnInit {
     this.loadReservations();
   }
 
+  /**
+   * Construit un message d'erreur approprié selon le code HTTP.
+   *
+   * 401 : Session expirée
+   * 403 : Accès refusé (pas les droits)
+   * 409 : Conflit métier
+   */
   private buildErrorMessage(err: any): string {
     if (!err) {
       return 'Une erreur inconnue est survenue.';
     }
     if (err.status === 0) {
       return 'Impossible de contacter le serveur. Vérifiez que le backend est bien démarré (port 8087).';
+    }
+    if (err.status === 401) {
+      return 'Votre session a expiré. Veuillez vous reconnecter.';
+    }
+    if (err.status === 403) {
+      return 'Vous n\'avez pas les droits nécessaires pour effectuer cette action.';
     }
     if (err.status === 409) {
       return err.error?.message || 'Conflit métier : cette réservation ne peut pas être annulée.';

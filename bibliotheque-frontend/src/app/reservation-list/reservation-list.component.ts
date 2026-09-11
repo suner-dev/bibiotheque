@@ -1,6 +1,13 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { Reservation } from '../_model/reservation';
+import { UserAuthService } from '../_service/user-auth.service';
 
+/**
+ * Composant d'affichage de la liste des réservations.
+ *
+ * RS-02 : Le bouton de suppression est masqué pour les ADHERENT.
+ * Seul le BIBLIOTHECAIRE peut supprimer des réservations.
+ */
 @Component({
   selector: 'app-reservation-list',
   templateUrl: './reservation-list.component.html',
@@ -20,6 +27,18 @@ export class ReservationListComponent {
   @Output() deleteRequested = new EventEmitter<number>();
 
   statuts = ['', 'EN_ATTENTE', 'DISPONIBLE', 'ANNULEE', 'EXPIREE', 'HONOREE'];
+
+  constructor(private userAuthService: UserAuthService) {}
+
+  /**
+   * RS-02 : Vérifie si l'utilisateur connecté est un bibliothécaire (Admin).
+   * Seul le bibliothécaire peut supprimer des réservations.
+   */
+  isBibliothecaire(): boolean {
+    const roles = this.userAuthService.getRoles();
+    if (!roles) return false;
+    return roles.some((role: any) => role.roleName === 'Admin');
+  }
 
   onFilterChange(): void {
     this.filterChange.emit(this.selectedStatut);

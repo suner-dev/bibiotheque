@@ -30,8 +30,9 @@
       </select>
     </div>
 
-    <!-- Adhérent -->
-    <div class="form-group mb-4">
+    <!-- RS-04 : Adhérent - masqué pour les ADHERENT (identité depuis token) -->
+    <!-- Seul le BIBLIOTHECAIRE peut choisir un adhérent pour la réservation -->
+    <div class="form-group mb-4" *ngIf="isBibliothecaire()">
       <label class="form-label">
         <i class="bi bi-person me-1"></i> Adhérent
       </label>
@@ -44,6 +45,12 @@
           {{ user.name }} — {{ user.username }}
         </option>
       </select>
+    </div>
+
+    <!-- RS-04 : Pour un ADHERENT, afficher un message indiquant que c'est pour lui -->
+    <div class="alert alert-info mb-3" *ngIf="!isBibliothecaire()">
+      <i class="bi bi-info-circle me-2"></i>
+      La réservation sera créée pour votre compte ({{ getCurrentAdherentId() }}).
     </div>
 
     <!-- Bouton de soumission -->
