@@ -18,6 +18,9 @@ public interface ReservationRepository extends JpaRepository<Reservation, Intege
 
     List<Reservation> findByAdherentUserIdAndStatut(Integer adherentId, ReservationStatus statut);
 
+    /** Réservations d'un adhérent sur un livre parmi des statuts donnés (RG-06 honorer). */
+    List<Reservation> findByAdherentUserIdAndLivreBookIdAndStatutIn(Integer adherentId, Integer livreId, List<ReservationStatus> statuts);
+
     long countByAdherentUserIdAndStatutIn(Integer adherentId, List<ReservationStatus> statuts);
 
     boolean existsByAdherentUserIdAndLivreBookIdAndStatutIn(Integer adherentId, Integer livreId, List<ReservationStatus> statuts);

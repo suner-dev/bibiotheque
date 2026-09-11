@@ -214,12 +214,18 @@ public class ReservationService {
 
     /**
      * RG-06 / cycle de vie : lorsqu'un adhérent emprunte effectivement le livre
-     * qu'il avait réservé (statut DISPONIBLE pour son compte), la réservation passe à HONOREE.
+     * qu'il avait réservé (statut EN_ATTENTE ou DISPONIBLE pour son compte),
+     * la réservation passe à HONOREE.
+     *
+     * COHÉRENCE MÉTIER : une réservation EN_ATTENTE sur un livre que l'adhérent
+     * vient d'emporter doit être clôturée (HONOREE), sinon elle resterait
+     * orpheline dans la file d'attente.
      */
     @Transactional
     public void honorerReservationSiExistante(Integer livreId, Integer adherentId) {
-        reservationRepository.findByAdherentUserIdAndStatut(adherentId, ReservationStatus.DISPONIBLE).stream()
-                .filter(reservation -> reservation.getLivre().getBookId().equals(livreId))
+        reservationRepository.findByAdherentUserIdAndLivreBookIdAndStatutIn(
+                        adherentId, livreId, Arrays.asList(ReservationStatus.EN_ATTENTE, ReservationStatus.DISPONIBLE))
+                .stream()
                 .findFirst()
                 .ifPresent(reservation -> {
                     reservation.setStatut(ReservationStatus.HONOREE);

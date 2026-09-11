@@ -20,6 +20,9 @@ public class BooksController {
     @Autowired
     private BooksRepository booksRepository;
 
+    @Autowired
+    private com.ibizabroker.bibliotheque.service.ReservationService reservationService;
+
     @GetMapping("/books")
     public List<Books> getAllBooks(){
         return booksRepository.findAll();
@@ -49,6 +52,12 @@ public class BooksController {
         book.setNoOfCopies(bookDetails.getNoOfCopies());
 
         Books updatedBook = booksRepository.save(book);
+
+        // RG-06 : un exemplaire (re)devient disponible -> la plus ancienne réservation EN_ATTENTE passe à DISPONIBLE
+        if (updatedBook.getNoOfCopies() != null && updatedBook.getNoOfCopies() > 0) {
+            reservationService.promouvoirProchaineReservation(updatedBook.getBookId());
+        }
+
         return ResponseEntity.ok(updatedBook);
     }
 

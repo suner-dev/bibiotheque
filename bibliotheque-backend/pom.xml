@@ -24,6 +24,7 @@
 		<java.version>17</java.version>
 		<lombok.version>1.18.38</lombok.version>
 		<mockito.version>5.14.2</mockito.version>
+		<byte-buddy.version>1.17.5</byte-buddy.version>
 	</properties>
 
 	<dependencies>
@@ -100,6 +101,29 @@
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
 			<version>${mockito.version}</version>
+			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>net.bytebuddy</groupId>
+					<artifactId>byte-buddy</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>net.bytebuddy</groupId>
+					<artifactId>byte-buddy-agent</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<!-- ByteBuddy récent (compatible Java 26 : mocks Mockito + proxies Hibernate) -->
+		<dependency>
+			<groupId>net.bytebuddy</groupId>
+			<artifactId>byte-buddy</artifactId>
+			<version>${byte-buddy.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>net.bytebuddy</groupId>
+			<artifactId>byte-buddy-agent</artifactId>
+			<version>${byte-buddy.version}</version>
 			<scope>test</scope>
 		</dependency>
 

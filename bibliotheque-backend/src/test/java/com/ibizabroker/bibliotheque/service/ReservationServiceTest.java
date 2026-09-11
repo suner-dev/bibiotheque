@@ -348,20 +348,46 @@ public class ReservationServiceTest {
     }
 
     @Test
-    void honorerReservationSiExistante_PasseDISPONIBLEAHONOREE() {
+    void honorerReservationSiExistante_PasseEN_ATTENTEAHONOREE() {
         var reservation = new com.ibizabroker.bibliotheque.entity.Reservation();
         reservation.setId(11);
         reservation.setStatut(ReservationStatus.DISPONIBLE);
         reservation.setLivre(book);
         reservation.setAdherent(user);
 
-        when(reservationRepository.findByAdherentUserIdAndStatut(1, ReservationStatus.DISPONIBLE))
+        // RG-06 (cohérence): une réservation EN_ATTENTE doit aussi être honorée à l'emprunt
+        when(reservationRepository.findByAdherentUserIdAndLivreBookIdAndStatutIn(anyInt(), anyInt(), any()))
                 .thenReturn(List.of(reservation));
         when(reservationRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         reservationService.honorerReservationSiExistante(1, 1);
 
         assertEquals(ReservationStatus.HONOREE, reservation.getStatut());
+    }
+
+    @Test
+    void honorerReservationSiExistante_PasseDISPONIBLEAHONOREE() {
+        var reservation = new com.ibizabroker.bibliotheque.entity.Reservation();
+        reservation.setId(12);
+        reservation.setStatut(ReservationStatus.DISPONIBLE);
+        reservation.setLivre(book);
+        reservation.setAdherent(user);
+
+        when(reservationRepository.findByAdherentUserIdAndLivreBookIdAndStatutIn(anyInt(), anyInt(), any()))
+                .thenReturn(List.of(reservation));
+        when(reservationRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        reservationService.honorerReservationSiExistante(1, 1);
+
+        assertEquals(ReservationStatus.HONOREE, reservation.getStatut());
+    }
+
+    @Test
+    void honorerReservationSiExistante_SansReservation_NeFaitRien() {
+        when(reservationRepository.findByAdherentUserIdAndLivreBookIdAndStatutIn(anyInt(), anyInt(), any()))
+                .thenReturn(List.of());
+
+        assertDoesNotThrow(() -> reservationService.honorerReservationSiExistante(1, 1));
     }
 
     @Test
