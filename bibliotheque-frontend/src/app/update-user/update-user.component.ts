@@ -13,6 +13,7 @@ export class UpdateUserComponent implements OnInit {
 
   userId: number;
   user: Users = new Users();
+  roles = ['Admin', 'User'];
 
   constructor(
     private usersService: UsersService,

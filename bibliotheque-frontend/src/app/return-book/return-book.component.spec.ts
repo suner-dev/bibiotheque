@@ -22,6 +22,10 @@ describe('ReturnBookComponent', () => {
     userAuthServiceSpy = jasmine.createSpyObj('UserAuthService', ['getUserId']);
     toastServiceSpy = jasmine.createSpyObj('ToastService', ['success', 'error']);
 
+    userAuthServiceSpy.getUserId.and.returnValue(1);
+    booksServiceSpy.getBooksList.and.returnValue(of([]));
+    borrowServiceSpy.getBooksBorrowedByUser.and.returnValue(of([]));
+
     await TestBed.configureTestingModule({
       declarations: [ReturnBookComponent],
       imports: [HttpClientTestingModule],
@@ -43,9 +47,6 @@ describe('ReturnBookComponent', () => {
   });
 
   it('should load books and user borrows on init', fakeAsync(() => {
-    booksServiceSpy.getBooksList.and.returnValue(of([]));
-    borrowServiceSpy.getBooksBorrowedByUser.and.returnValue(of([]));
-    userAuthServiceSpy.getUserId.and.returnValue(1);
     component.ngOnInit();
     tick();
     expect(booksServiceSpy.getBooksList).toHaveBeenCalled();

@@ -1,12 +1,15 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { of } from 'rxjs';
 import { UpdateBookComponent } from './update-book.component';
 import { BooksService } from '../_service/books.service';
 import { ToastService } from '../_service/toast.service';
-import { of } from 'rxjs';
+
+@Component({ selector: 'stub-books-list', template: '' })
+class BooksListStubComponent {}
 
 describe('UpdateBookComponent', () => {
   let component: UpdateBookComponent;
@@ -17,13 +20,14 @@ describe('UpdateBookComponent', () => {
   beforeEach(async () => {
     booksServiceSpy = jasmine.createSpyObj('BooksService', ['updateBook', 'getBookById']);
     toastServiceSpy = jasmine.createSpyObj('ToastService', ['success', 'error']);
+    booksServiceSpy.getBookById.and.returnValue(of({ bookId: 1, bookName: 'Test', bookAuthor: 'Author', bookGenre: 'Fiction', noOfCopies: 1 }));
     await TestBed.configureTestingModule({
       declarations: [UpdateBookComponent],
-      imports: [HttpClientTestingModule, RouterTestingModule],
+      imports: [HttpClientTestingModule, RouterTestingModule.withRoutes([{ path: 'books', component: BooksListStubComponent }])],
       providers: [
         { provide: BooksService, useValue: booksServiceSpy },
         { provide: ToastService, useValue: toastServiceSpy },
-        { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => '1' } } } },
+        { provide: ActivatedRoute, useValue: { snapshot: { params: { bookId: '1' } } } },
       ],
       schemas: [NO_ERRORS_SCHEMA]
     }).compileComponents();

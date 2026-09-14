@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
+import { FormsModule } from '@angular/forms';
 import { LoginComponent } from './login.component';
 import { UsersService } from '../_service/users.service';
 import { UserAuthService } from '../_service/user-auth.service';
@@ -13,7 +14,7 @@ describe('LoginComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       declarations: [LoginComponent],
-      imports: [HttpClientTestingModule, RouterTestingModule],
+      imports: [HttpClientTestingModule, RouterTestingModule, FormsModule],
       providers: [
         { provide: UsersService, useValue: jasmine.createSpyObj('UsersService', ['login']) },
         { provide: UserAuthService, useValue: jasmine.createSpyObj('UserAuthService', ['setRoles', 'setToken', 'setUserId', 'setName']) },

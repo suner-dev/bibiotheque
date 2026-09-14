@@ -12,6 +12,7 @@ import { ToastService } from '../_service/toast.service';
 export class RegistrationComponent implements OnInit {
 
   user: Users = new Users();
+  roles = ['Admin', 'User'];
 
   constructor(
     private usersService: UsersService,

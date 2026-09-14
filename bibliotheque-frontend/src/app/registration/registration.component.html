@@ -38,10 +38,9 @@
           <i class="bi bi-shield me-1"></i> Rôle
         </label>
         <select class="form-select" id="role"
-                [(ngModel)]="user.role[0].roleName" name="role" required>
+                [(ngModel)]="user.role" name="role" required>
           <option value="" disabled selected>Sélectionner un rôle</option>
-          <option value="Admin">Admin</option>
-          <option value="User">User</option>
+          <option *ngFor="let role of roles" [value]="role">{{role}}</option>
         </select>
       </div>
 

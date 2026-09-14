@@ -1,26 +1,39 @@
 import { TestBed } from '@angular/core/testing';
+import { Component } from '@angular/core';
 import { RouterTestingModule } from '@angular/router/testing';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { AppComponent } from './app.component';
-import { ToastComponent } from './toast/toast.component';
-import { HeaderComponent } from './header/header.component';
+import { UserAuthService } from './_service/user-auth.service';
+import { UsersService } from './_service/users.service';
+import { ThemeService } from './_service/theme.service';
+import { AuthGuard } from './_auth/auth.guard';
+
+@Component({ selector: 'app-header', template: '<span>Bibliothèque LMS</span>' })
+class MockHeaderComponent {}
+
+@Component({ selector: 'app-toast', template: '' })
+class MockToastComponent {}
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [
-        RouterTestingModule,
+        RouterTestingModule.withRoutes([]),
         BrowserAnimationsModule,
         HttpClientTestingModule,
       ],
       declarations: [
         AppComponent,
-        ToastComponent,
-        HeaderComponent,
+        MockToastComponent,
+        MockHeaderComponent,
       ],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA],
+      providers: [
+        { provide: UserAuthService, useValue: jasmine.createSpyObj('UserAuthService', ['getName', 'isLoggedIn', 'clear']) },
+        { provide: UsersService, useValue: jasmine.createSpyObj('UsersService', ['roleMatch']) },
+        { provide: ThemeService, useValue: { isDark: false, toggle: jasmine.createSpy() } },
+        { provide: AuthGuard, useValue: { canActivate: () => true } },
+      ],
     }).compileComponents();
   });
 
@@ -40,6 +53,6 @@ describe('AppComponent', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.content span')?.textContent).toContain('bibliotheque-frontend app is running!');
+    expect(compiled.querySelector('app-header')?.textContent).toContain('Bibliothèque');
   });
 });

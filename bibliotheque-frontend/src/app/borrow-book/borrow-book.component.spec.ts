@@ -24,6 +24,10 @@ describe('BorrowBookComponent', () => {
     userAuthServiceSpy = jasmine.createSpyObj('UserAuthService', ['getUserId']);
     toastServiceSpy = jasmine.createSpyObj('ToastService', ['success', 'error']);
 
+    booksServiceSpy.getBooksList.and.returnValue(of([]));
+    userAuthServiceSpy.getUserId.and.returnValue(1);
+    borrowServiceSpy.borrowBook.and.returnValue(of({ message: 'Success' }));
+
     await TestBed.configureTestingModule({
       declarations: [BorrowBookComponent],
       imports: [HttpClientTestingModule],

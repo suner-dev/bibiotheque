@@ -1,11 +1,14 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { CreateBookComponent } from './create-book.component';
 import { BooksService } from '../_service/books.service';
 import { ToastService } from '../_service/toast.service';
 import { of } from 'rxjs';
+
+@Component({ selector: 'stub-books-list', template: '' })
+class BooksListStubComponent {}
 
 describe('CreateBookComponent', () => {
   let component: CreateBookComponent;
@@ -18,7 +21,7 @@ describe('CreateBookComponent', () => {
     toastServiceSpy = jasmine.createSpyObj('ToastService', ['success', 'error']);
     await TestBed.configureTestingModule({
       declarations: [CreateBookComponent],
-      imports: [HttpClientTestingModule, RouterTestingModule],
+      imports: [HttpClientTestingModule, RouterTestingModule.withRoutes([{ path: 'books', component: BooksListStubComponent }])],
       providers: [
         { provide: BooksService, useValue: booksServiceSpy },
         { provide: ToastService, useValue: toastServiceSpy },
