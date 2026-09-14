@@ -24,7 +24,7 @@ public class AdminController {
 
     @PostMapping("/users")
 //    @PreAuthorize("hasRole('Admin')")
-    public Users addUserByAdmin(@RequestBody Users user) {
+    public ResponseEntity<Users> addUserByAdmin(@RequestBody Users user) {
 //        Role role = new Role();
 ////        role.setRoleName(UserConstant.DEFAULT_ROLE);
 //        role.setRoleName(role.getRoleName());
@@ -34,8 +34,8 @@ public class AdminController {
         String password = user.getPassword();
         String encryptPassword = passwordEncoder.encode(password);
         user.setPassword(encryptPassword);
-        usersRepository.save(user);
-        return user;
+        Users saved = usersRepository.save(user);
+        return ResponseEntity.status(201).body(saved);
     }
 
     @GetMapping("/users")

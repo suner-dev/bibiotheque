@@ -228,6 +228,100 @@ public class ReservationSecurityIntegrationTest {
                 .andExpect(jsonPath("$.adherentId").value(adherent1.getUserId()));
     }
 
+    // ==================== Validation des requêtes ====================
+
+    @Test
+    void createReservationWithMissingLivreIdReturns400() throws Exception {
+        ReservationRequest request = new ReservationRequest();
+        request.setLivreId(null);
+        request.setAdherentId(adherent1.getUserId());
+
+        mockMvc.perform(post("/api/reservations")
+                        .header("Authorization", "Bearer " + tokenAdherent)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createReservationWithMalformedJsonReturns400() throws Exception {
+        mockMvc.perform(post("/api/reservations")
+                        .header("Authorization", "Bearer " + tokenAdherent)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{bad json"))
+                .andExpect(status().isBadRequest());
+    }
+
+    // ==================== RG-01: Réservation d'un livre disponible ====================
+
+    @Test
+    void createReservationForAvailableBookReturns409() throws Exception {
+        Books livreDisponible = new Books();
+        livreDisponible.setBookName("Livre Disponible");
+        livreDisponible.setBookAuthor("Auteur");
+        livreDisponible.setBookGenre("Roman");
+        livreDisponible.setNoOfCopies(3);
+        livreDisponible = booksRepository.save(livreDisponible);
+
+        ReservationRequest request = new ReservationRequest();
+        request.setLivreId(livreDisponible.getBookId());
+        request.setAdherentId(adherent1.getUserId());
+
+        mockMvc.perform(post("/api/reservations")
+                        .header("Authorization", "Bearer " + tokenAdherent)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isConflict());
+    }
+
+    // ==================== Gestion des erreurs 404 ====================
+
+    @Test
+    void getNonExistentReservationReturns404() throws Exception {
+        mockMvc.perform(get("/api/reservations/99999")
+                        .header("Authorization", "Bearer " + tokenAdherent))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void cancelNonExistentReservationReturns404() throws Exception {
+        mockMvc.perform(patch("/api/reservations/99999/annuler")
+                        .header("Authorization", "Bearer " + tokenAdherent))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void deleteNonExistentReservationReturns404ForAdmin() throws Exception {
+        mockMvc.perform(delete("/api/reservations/99999")
+                        .header("Authorization", "Bearer " + tokenBibliothecaire))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void createReservationForNonExistentBookReturns404() throws Exception {
+        ReservationRequest request = new ReservationRequest();
+        request.setLivreId(99999);
+        request.setAdherentId(adherent1.getUserId());
+
+        mockMvc.perform(post("/api/reservations")
+                        .header("Authorization", "Bearer " + tokenAdherent)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound());
+    }
+
+    // ==================== RS-02: Bibliothécaire peut tout faire ====================
+
+    @Test
+    void bibliothecaireCanCancelAnyReservation() throws Exception {
+        Reservation res = createReservationFor(adherent1);
+
+        mockMvc.perform(patch("/api/reservations/" + res.getId() + "/annuler")
+                        .header("Authorization", "Bearer " + tokenBibliothecaire))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statut").value("ANNULEE"));
+    }
+
     // ==================== RS-05: Filtrage des réservations ====================
 
     @Test

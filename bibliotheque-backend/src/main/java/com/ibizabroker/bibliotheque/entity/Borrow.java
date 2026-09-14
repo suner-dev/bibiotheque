@@ -1,5 +1,7 @@
 package com.ibizabroker.bibliotheque.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.Data;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -19,15 +21,21 @@ public class Borrow {
     Integer userId;
 
     @Temporal(TemporalType.TIMESTAMP)
-    @JsonSerialize(using=JsonDataSerializer.class)
+    @JsonSerialize(using = JsonDataSerializer.class)
+    @JsonDeserialize(using = JsonDataDeserializer.class)
+    @JsonFormat(pattern = "dd-MM-yyyy")
     Date issueDate;
 
     @Temporal(TemporalType.TIMESTAMP)
-    @JsonSerialize(using=JsonDataSerializer.class)
+    @JsonSerialize(using = JsonDataSerializer.class)
+    @JsonDeserialize(using = JsonDataDeserializer.class)
+    @JsonFormat(pattern = "dd-MM-yyyy")
     Date returnDate;
 
     @Temporal(TemporalType.TIMESTAMP)
-    @JsonSerialize(using=JsonDataSerializer.class)
+    @JsonSerialize(using = JsonDataSerializer.class)
+    @JsonDeserialize(using = JsonDataDeserializer.class)
+    @JsonFormat(pattern = "dd-MM-yyyy")
     Date dueDate;
 
 }
